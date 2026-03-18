@@ -1,4 +1,4 @@
-# HomeVault — AI Document Assistant
+# HomeAtlas — AI Document Assistant
 
 > RAG-powered home document repository. Node.js · React · PostgreSQL · pgvector · LangChain · Railway · Neon · Clerk
 
@@ -6,14 +6,14 @@
 
 ## Project Purpose
 
-HomeVault lets homeowners upload PDFs (appliance manuals, architectural plans, land titles, receipts) and query them conversationally. The AI agent retrieves relevant document chunks and answers with cited references.
+HomeAtlas lets homeowners upload PDFs (appliance manuals, architectural plans, land titles, receipts) and query them conversationally. The AI agent retrieves relevant document chunks and answers with cited references.
 
 ---
 
 ## Repository Layout
 
 ```
-homevault/
+home-atlas/
 ├── apps/
 │   ├── api/           # Express + Node.js backend
 │   └── web/           # React + TypeScript frontend

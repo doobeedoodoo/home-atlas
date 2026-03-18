@@ -1,6 +1,6 @@
 # Vertical Thin Slices
 
-Implementation order for HomeVault. Each slice is independently deployable and demonstrable. Work top-to-bottom — dependencies are strict.
+Implementation order for HomeAtlas. Each slice is independently deployable and demonstrable. Work top-to-bottom — dependencies are strict.
 
 ---
 

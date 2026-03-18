@@ -70,7 +70,7 @@ User query
   │
   ▼
 4. Build grounded prompt
-     System: HomeVault agent instructions + citation format requirements
+     System: HomeAtlas agent instructions + citation format requirements
      Context: top-k chunks formatted with document name + page number
      History: last N messages from session (N=10)
      User: current query
@@ -88,7 +88,7 @@ User query
 ### System Prompt
 
 ```
-You are HomeVault, an AI assistant that answers questions about a user's home documents.
+You are HomeAtlas, an AI assistant that answers questions about a user's home documents.
 
 You have access to the following document excerpts retrieved for this query.
 Answer ONLY based on these excerpts. If the answer is not contained in the excerpts,
@@ -119,27 +119,33 @@ interface Citation {
 
 ### Sessions
 
-| Method | Path | Description |
-|---|---|---|
-| GET | /api/v1/chat/sessions | List sessions for user (paginated) |
-| POST | /api/v1/chat/sessions | Create new session |
-| GET | /api/v1/chat/sessions/:id | Get session with messages |
-| DELETE | /api/v1/chat/sessions/:id | Delete session + messages |
+
+| Method | Path                      | Description                        |
+| ------ | ------------------------- | ---------------------------------- |
+| GET    | /api/v1/chat/sessions     | List sessions for user (paginated) |
+| POST   | /api/v1/chat/sessions     | Create new session                 |
+| GET    | /api/v1/chat/sessions/:id | Get session with messages          |
+| DELETE | /api/v1/chat/sessions/:id | Delete session + messages          |
+
 
 ### Messages
 
-| Method | Path | Description |
-|---|---|---|
-| POST | /api/v1/chat/sessions/:id/messages | Send message, stream response |
+
+| Method | Path                               | Description                   |
+| ------ | ---------------------------------- | ----------------------------- |
+| POST   | /api/v1/chat/sessions/:id/messages | Send message, stream response |
+
 
 ### Streaming Response (`POST /chat/sessions/:id/messages`)
 
 Request:
+
 ```json
 { "content": "My television is not turning on. What should I do?" }
 ```
 
 Response: `Content-Type: text/event-stream`
+
 ```
 data: {"type":"chunk","text":"Based on your Samsung TV manual, "}
 data: {"type":"chunk","text":"check the following steps:\n\n1. "}
@@ -152,12 +158,14 @@ data: {"type":"done","citations":[{"documentId":"...","documentName":"Samsung TV
 ## Observability (LangFuse)
 
 Every RAG call logs:
+
 - Input: user query, retrieved chunk IDs, similarity scores
 - Output: response text, citation list, stop reason
 - Metadata: session ID, user ID (hashed)
 - Metrics: latency, prompt tokens, completion tokens, estimated cost
 
 LangFuse is used for:
+
 - Debugging poor retrievals (inspect which chunks were selected)
 - Prompt versioning (track performance across prompt changes)
 - Cost monitoring per user / per session
