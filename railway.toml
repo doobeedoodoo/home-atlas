@@ -1,8 +1,4 @@
-[build]
-buildCommand = "npm ci && npm run build --workspace=apps/api"
-
 [deploy]
-startCommand = "npm run migrate --workspace=packages/db && node apps/api/dist/apps/api/src/index.js"
 healthcheckPath = "/health/live"
 healthcheckTimeout = 30
 restartPolicyType = "on_failure"
