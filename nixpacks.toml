@@ -2,7 +2,7 @@
 nixPkgs = ["nodejs_20"]
 
 [phases.install]
-cmds = ["npm ci"]
+cmds = ["rm -rf apps/web/node_modules/.vite", "npm install"]
 
 [phases.build]
 cmds = ["npm run build --workspace=apps/api"]
