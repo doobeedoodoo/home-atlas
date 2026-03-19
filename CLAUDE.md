@@ -32,7 +32,7 @@ home-atlas/
 | Layer | Technology | Notes |
 |---|---|---|
 | **Backend API** | Node.js 20 + Express + TypeScript | REST + SSE for streaming |
-| **Frontend** | React 18 + TypeScript + Vite | Tailwind CSS, React Query |
+| **Frontend** | React 19 + TypeScript + Vite | Material UI v7, React Query |
 | **Database** | Neon (serverless PostgreSQL 16 + pgvector) | Free tier; scales to zero |
 | **Migrations** | Knex.js | All schema changes versioned |
 | **AI / RAG** | LangChain.js + Anthropic Claude | claude-sonnet-4-5 as LLM |
@@ -176,6 +176,136 @@ cd apps/web && npm run dev
 ```
 
 Docker Compose runs `pgvector/pgvector:pg16` and `redis:7-alpine` only. No LocalStack needed — R2 uses the real Cloudflare account (free tier), and Clerk uses development-mode keys.
+
+---
+
+## Frontend — `apps/web`
+
+### Stack & Versions
+
+| Package | Version | Notes |
+|---|---|---|
+| React | 19 | Concurrent features; use `use` hook for async |
+| TypeScript | ~5.9 | Strict mode; `tsconfig.app.json` is the source of truth |
+| Vite | 8 | Dev server + bundler |
+| Material UI | 7 (`@mui/material`) | Component library |
+| Emotion | 11 (`@emotion/react`, `@emotion/styled`) | MUI's CSS-in-JS engine |
+| React Router | 7 | Client-side routing |
+| TanStack Query | 5 (`@tanstack/react-query`) | Server state, caching, mutations |
+| Clerk React | latest | Auth UI via `@clerk/clerk-react` |
+
+---
+
+### File Structure
+
+```
+apps/web/src/
+├── main.tsx                  # App entry — providers only
+├── App.tsx                   # Router + top-level layout
+├── theme.ts                  # MUI theme (palette, typography, components)
+├── mocks/                    # Mock data for Slice 0.5; deleted when real API is wired
+│   ├── documents.ts
+│   └── chat.ts
+├── api/                      # API client functions (one file per resource)
+│   ├── client.ts             # Axios/fetch base with auth header injection
+│   ├── documents.ts
+│   └── chat.ts
+├── hooks/                    # Custom hooks (wrap TanStack Query calls)
+│   ├── useDocuments.ts
+│   └── useChat.ts
+├── components/               # Shared, stateless UI components
+│   ├── AppShell/
+│   │   ├── AppShell.tsx
+│   │   └── Sidebar.tsx
+│   └── CitationChip/
+│       └── CitationChip.tsx
+├── pages/                    # One directory per route
+│   ├── Documents/
+│   │   ├── DocumentsPage.tsx
+│   │   ├── DocumentList.tsx
+│   │   └── UploadZone.tsx
+│   ├── Chat/
+│   │   ├── ChatPage.tsx
+│   │   ├── MessageList.tsx
+│   │   └── SessionSidebar.tsx
+│   └── Auth/
+│       ├── SignInPage.tsx
+│       └── SignUpPage.tsx
+└── types/                    # Frontend-only types (not shared with API)
+    └── index.ts
+```
+
+---
+
+### Component Conventions
+
+- **One component per file.** File name matches the exported component name.
+- **Functional components only** — no class components.
+- **Props typed inline** with a `Props` interface at the top of the file; never use `React.FC<Props>`.
+- **No default exports from `pages/` barrel files** — import directly from the component file.
+- Keep components small: if a component exceeds ~120 lines, extract a child component.
+- Co-locate styles with the component using `sx` prop or `styled()`; no global CSS except resets in `main.tsx`.
+
+```tsx
+// Correct
+interface Props {
+  document: Document;
+  onDelete: (id: string) => void;
+}
+
+export function DocumentCard({ document, onDelete }: Props) { ... }
+```
+
+---
+
+### MUI Usage Rules
+
+- **Theme first** — all colours, spacing, and typography come from `theme.ts`. Never hardcode hex values or `px` sizes outside the theme.
+- **`sx` prop for one-off styles** — prefer `sx` over inline `style` or `styled()` for single-use overrides.
+- **`styled()` for reusable styled components** — when the same style block is used in two or more places, extract it.
+- **Use MUI primitives** — `Box`, `Stack`, `Typography`, `Divider` before reaching for custom HTML elements.
+- **`Stack` for layout** — prefer `Stack` with `spacing` and `direction` over manual `flexbox` in `sx`.
+- **No Tailwind** — MUI's `sx` system and theme handle all styling; do not mix in Tailwind classes.
+- **Icons** — import from `@mui/icons-material` only; do not add other icon libraries.
+- **Theme palette** — primary is teal green (`#008080` base), background and surface use black/grey/white scale.
+
+```tsx
+// Correct
+<Stack direction="row" spacing={2} alignItems="center">
+  <Typography variant="body2" color="text.secondary">{label}</Typography>
+</Stack>
+
+// Wrong — hardcoded colour
+<Box sx={{ color: '#666' }}>...</Box>
+```
+
+---
+
+### State Management
+
+- **Server state** — TanStack Query (`useQuery`, `useMutation`). All API calls go through query hooks in `hooks/`.
+- **Local UI state** — `useState` / `useReducer` within the component. Do not lift UI-only state to a global store.
+- **Auth state** — provided by Clerk's `useUser` / `useAuth` hooks; never duplicated in local state.
+- **Form state** — uncontrolled inputs with `useRef`, or a single `useState` per field. No form library until complexity demands it.
+
+---
+
+### API Layer
+
+- All fetch calls live in `api/` — pages and hooks never call `fetch` directly.
+- During Slice 0.5, `api/` functions return mock data imported from `mocks/`. The function signature stays identical so wiring the real API is a one-line change.
+- TanStack Query hooks in `hooks/` wrap the `api/` functions; pages import hooks, not `api/` functions.
+- Auth tokens are attached in `api/client.ts` — nowhere else.
+
+---
+
+### AI Assistant Instructions — Frontend
+
+12. **MUI over custom CSS** — use MUI components and the `sx` prop; never introduce Tailwind or CSS modules
+13. **TanStack Query for all server state** — no `useEffect` + `fetch` patterns
+14. **Mock data lives in `mocks/`** — keep the same function signatures so swapping to real API requires no component changes
+15. **Strict component size** — flag and extract if a component exceeds ~120 lines
+16. **No inline theme values** — always reference `theme.palette`, `theme.spacing`, or `theme.typography` tokens
 
 ---
 

@@ -21,6 +21,32 @@ _No features, just a working deploy pipeline end-to-end._
 
 ---
 
+## Slice 0.5 — UI Shell (Mocked)
+
+_The full application UI is built and navigable with mocked data — no real API calls._
+
+- Set up React Router in `apps/web`; define routes for `/`, `/documents`, `/chat`, `/login`
+- Build the persistent app shell:
+  - The side bar should contain the menu. The menu should contain icons that navigate to Documents and Chat. At the bottom of the menu, an avatar is displayed, when if clicked, opens up a submenu that displays the user info and an option to logout.
+- Build the **Documents** page:
+  - Mocked document list (name, status badge, upload date)
+  - Upload button/drag-and-drop zone (no-op on submit)
+  - Rename and delete actions (UI only)
+- Build the **Chat** page:
+  - Message list with mock assistant and user messages
+  - Text input + send button (appends a mock response locally)
+  - Citation chips below mock assistant messages
+  - Session sidebar with a few hardcoded past sessions
+- Build placeholder **Sign In / Sign Up** pages (no Clerk yet)
+- All API calls replaced by in-module mock data or a `mocks/` helper file
+- The website is inspired by how https://claude.ai/new looks.
+- Use a theme that is soothing to the eyes: with black, gray and white as the major colors and teal green as the accent.
+- Responsive layout from the start: sidebar collapses on mobile
+
+**Done when:** A developer can navigate every screen, see realistic placeholder content, and demo the full UI flow without a running backend.
+
+---
+
 ## Slice 1 — Authentication
 
 _Users can sign up, verify email, sign in, and sign out._
