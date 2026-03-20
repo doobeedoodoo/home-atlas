@@ -24,8 +24,9 @@ documents (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   name            TEXT NOT NULL,
-  r2_key          TEXT NOT NULL UNIQUE,       -- e.g. docs/{userId}/{docId}.pdf
-  file_size_bytes BIGINT NOT NULL,
+  r2_key          TEXT UNIQUE,               -- NULL for URL-sourced docs
+  source_url      TEXT,                      -- Phase 2: set for URL-ingested docs
+  file_size_bytes BIGINT,                    -- NULL for URL-sourced docs
   mime_type       TEXT NOT NULL DEFAULT 'application/pdf',
   status          TEXT NOT NULL DEFAULT 'pending'
                     CHECK (status IN ('pending','processing','ready','failed')),
@@ -47,6 +48,8 @@ document_chunks (
   content      TEXT NOT NULL,
   embedding    vector(1536),
   token_count  INTEGER,
+  metadata     JSONB,                        -- e.g. { "section": "Installation", "pageTitle": "Samsung TV Support" }
+  content_tsv  TSVECTOR GENERATED ALWAYS AS (to_tsvector('english', content)) STORED,
   created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE (document_id, chunk_index)
 );
@@ -56,6 +59,7 @@ CREATE INDEX document_chunks_user_id_idx     ON document_chunks(user_id);
 CREATE INDEX document_chunks_embedding_idx
   ON document_chunks USING ivfflat (embedding vector_cosine_ops)
   WITH (lists = 100);
+CREATE INDEX document_chunks_content_tsv_idx ON document_chunks USING gin (content_tsv);
 ```
 
 ---
@@ -66,11 +70,12 @@ CREATE INDEX document_chunks_embedding_idx
 |---|---|---|
 | POST | /api/v1/documents/upload-url | Get presigned R2 upload URL |
 | POST | /api/v1/documents/:id/confirm | Confirm upload complete, trigger ingestion |
+| POST | /api/v1/documents/ingest-url | **Phase 2** — submit a URL for scraping and ingestion |
 | GET | /api/v1/documents | List all documents for user; `?q=` for name search |
 | GET | /api/v1/documents/:id | Get document details + status |
 | PATCH | /api/v1/documents/:id | Rename document |
 | DELETE | /api/v1/documents/:id | Delete document, chunks, and R2 object |
-| GET | /api/v1/documents/:id/download-url | Get presigned R2 download URL (valid 15 min) |
+| GET | /api/v1/documents/:id/download-url | Get presigned R2 download URL (valid 15 min); redirects to `source_url` for URL-sourced docs |
 | POST | /api/v1/documents/:id/reprocess | Re-enqueue a failed document for ingestion |
 
 All routes: `Authorization: Bearer <token>` required. Row-level enforcement: all queries filter by `user_id = req.auth.userId`.
@@ -89,6 +94,15 @@ export const UploadUrlSchema = z.object({
 export const RenameDocumentSchema = z.object({
   name: z.string().min(1).max(200),
 });
+
+// Phase 2 — URL ingestion
+export const IngestUrlSchema = z.object({
+  name: z.string().min(1).max(200),
+  url: z.string().url().max(2048).refine(
+    (u) => u.startsWith('https://'),
+    'Only HTTPS URLs are accepted'
+  ),
+});
 ```
 
 ---
@@ -98,6 +112,7 @@ export const RenameDocumentSchema = z.object({
 - Dashboard: flat document list, sortable by name / upload date / status
 - Status badge: `pending` (gray), `processing` (amber, animated), `ready` (green), `failed` (red + retry button)
 - Upload flow: drag-and-drop zone with name input field; file type and size validated client-side before upload starts
+- **Phase 2 — URL tab**: toggle between "Upload file" and "Add from URL"; URL tab shows a name field + URL field; submits to `POST /api/v1/documents/ingest-url`; source URL displayed as a link in the document detail view in place of the download button
 - Empty state: prompt to upload first document with example suggestions ("Try uploading an appliance manual")
 - Search: client-side filter on document name — no API call needed for small lists
 
@@ -105,4 +120,5 @@ export const RenameDocumentSchema = z.object({
 
 ## Phase
 
-MVP
+MVP (file upload, CRUD, download)
+Phase 2 (URL ingestion — `ingest-url` endpoint, schema migration, scraping worker, URL tab in upload UI)

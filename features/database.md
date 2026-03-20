@@ -38,8 +38,9 @@ CREATE TABLE documents (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   name            TEXT NOT NULL,
-  r2_key          TEXT NOT NULL UNIQUE,       -- e.g. docs/{userId}/{docId}.pdf
-  file_size_bytes BIGINT NOT NULL,
+  r2_key          TEXT UNIQUE,               -- e.g. docs/{userId}/{docId}.pdf; NULL for URL-sourced docs
+  source_url      TEXT,                      -- Phase 2: set for URL-ingested docs; NULL for file uploads
+  file_size_bytes BIGINT,                    -- NULL for URL-sourced docs (unknown until scrape completes)
   mime_type       TEXT NOT NULL DEFAULT 'application/pdf',
   status          TEXT NOT NULL DEFAULT 'pending'
                     CHECK (status IN ('pending','processing','ready','failed')),
@@ -48,6 +49,8 @@ CREATE TABLE documents (
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+-- Exactly one of r2_key or source_url must be set per row.
+-- Enforced at the application layer (Zod + route logic).
 CREATE INDEX documents_user_id_idx ON documents(user_id);
 CREATE INDEX documents_status_idx  ON documents(status);
 
@@ -63,6 +66,8 @@ CREATE TABLE document_chunks (
   content      TEXT NOT NULL,
   embedding    vector(1536),
   token_count  INTEGER,
+  metadata     JSONB,                        -- e.g. { "section": "Installation", "pageTitle": "Samsung TV Support" }
+  content_tsv  TSVECTOR GENERATED ALWAYS AS (to_tsvector('english', content)) STORED,
   created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE (document_id, chunk_index)
 );
@@ -71,6 +76,7 @@ CREATE INDEX document_chunks_user_id_idx     ON document_chunks(user_id);
 CREATE INDEX document_chunks_embedding_idx
   ON document_chunks USING ivfflat (embedding vector_cosine_ops)
   WITH (lists = 100);
+CREATE INDEX document_chunks_content_tsv_idx ON document_chunks USING gin (content_tsv);
 
 -- ============================================================
 -- Chat Sessions
@@ -140,8 +146,3 @@ Examples:
 Only `users` has `deleted_at`. All other tables cascade on delete. User deletion purge job hard-deletes rows with `deleted_at < now() - interval '30 days'`.
 
 ---
-
-## Phase
-
-MVP (all tables above)
-Phase 2 (add `document_chunks.metadata JSONB` for section headings, add full-text search index on `document_chunks.content`)

@@ -68,8 +68,6 @@ _Users can sign up, verify email, sign in, and sign out._
 
 _Users can upload a PDF, give it a name, and see it in their library._
 
-> **Note:** Items and Spaces have been removed from the data model. Documents are the primary entity — owned directly by the user with no folder or grouping hierarchy. This slice replaces what was previously two separate slices (Items CRUD and Document Upload).
-
 - Write migration: `documents` table
 - Create `packages/storage`: R2 client wrapper, `generateUploadUrl`, `generateDownloadUrl`, `deleteObject`
 - Configure Cloudflare R2 bucket (private, CORS for presigned PUT)
@@ -184,6 +182,12 @@ _The app is demo-ready and works on mobile._
 
 _Differentiating AI features that go beyond basic RAG._
 
+- **URL ingestion**:
+  - SSRF guard utility: block private IP ranges and non-HTTPS schemes before fetching
+  - Scraping worker in `packages/ai`: fetch URL → `@mozilla/readability` + `jsdom` → extract article body → `RecursiveCharacterTextSplitter` → embed → insert chunks
+  - New endpoint `POST /api/v1/documents/ingest-url` (Zod `IngestUrlSchema`): validate, insert `documents` row with `status: 'pending'`, enqueue BullMQ job
+  - Update `GET /api/v1/documents/:id/download-url`: redirect to `source_url` for URL-sourced docs instead of generating a presigned URL
+  - UI: "Add from URL" tab in upload zone; document detail shows source URL as a link
 - **Hybrid search**: combine pgvector cosine with PostgreSQL `ts_vector` full-text search (RRF re-ranking)
 - **Query reformulation**: LLM rewrites ambiguous queries before retrieval
 - **Structured extraction on ingestion**: extract document type, key dates, and metadata from the PDF automatically on upload

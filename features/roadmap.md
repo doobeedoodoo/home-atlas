@@ -2,16 +2,16 @@
 
 ## Summary
 
-| Phase | Theme | Target |
-|---|---|---|
-| MVP | Core loop: upload PDF → ask questions → get cited answers | Week 1–6 |
-| Phase 1 | Production hardening + UX polish | Week 7–12 |
-| Phase 2 | Advanced AI capabilities | Week 13–20 |
-| Phase 3 | Collaboration + platform features | Week 21+ |
+| Phase | Theme
+|---|---
+| MVP | Core loop: upload PDF → ask questions → get cited answers
+| Phase 1 | Production hardening + UX polish
+| Phase 2 | Advanced AI capabilities
+| Phase 3 | Collaboration + platform features
 
 ---
 
-## MVP (Weeks 1–6)
+## MVP
 
 **Goal**: A working, deployed app that demonstrates the core RAG loop end-to-end.
 
@@ -35,7 +35,7 @@
 
 ---
 
-## Phase 1: Production Hardening (Weeks 7–12)
+## Phase 1: Production Hardening
 
 **Goal**: Make the MVP genuinely production-ready and polished enough for portfolio showcase.
 
@@ -53,12 +53,13 @@
 
 ---
 
-## Phase 2: Advanced AI (Weeks 13–20)
+## Phase 2: Advanced AI
 
 **Goal**: Differentiate with more sophisticated AI capabilities; strengthen portfolio story.
 
 ### Features
 
+- [ ] **URL ingestion**: user provides a URL; the system scrapes the page, chunks the text, and stores embeddings — no file upload needed. Uses `@mozilla/readability` + `jsdom` for content extraction; SSRF guard blocks private IP ranges.
 - [ ] **Multi-document comparison**: "Compare the warranty terms of my washing machine and dishwasher"
 - [ ] **Agent tools**: give the LLM tools it can call (search by item, filter by date, lookup model)
 - [ ] **Structured extraction**: extract model number, serial, warranty from uploaded manual on ingestion
@@ -72,7 +73,7 @@
 
 ---
 
-## Phase 3: Platform (Weeks 21+)
+## Phase 3: Platform
 
 **Goal**: Expand scope to justify long-term value; explore multi-user / sharing scenarios.
 
@@ -89,11 +90,9 @@
 
 ---
 
-## Job Market Relevance
+## Concept Map
 
-This project demonstrates skills that are hot in 2025–2026:
-
-| Skill | Where demonstrated |
+| Concept | Details |
 |---|---|
 | RAG pipeline design | `packages/ai`, `features/rag-chat.md` |
 | Vector databases (pgvector) | `features/database.md`, embedding storage + retrieval |
@@ -105,3 +104,4 @@ This project demonstrates skills that are hot in 2025–2026:
 | Structured AI outputs | Citation extraction, structured JSON from LLM |
 | AI eval / quality measurement | LangFuse datasets, offline regression testing |
 | Cloud-agnostic storage (R2) | S3-compatible API without AWS lock-in |
+| Web scraping + SSRF defence | URL ingestion, readability extraction, private-IP blocking |
