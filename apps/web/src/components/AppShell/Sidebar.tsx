@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useUser, useClerk } from '@clerk/react';
 import Box from '@mui/material/Box';
 import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
@@ -21,8 +22,6 @@ const NAV_ITEMS = [
   { label: 'Chat', icon: ChatBubbleOutlineIcon, path: '/chat' },
 ];
 
-const MOCK_USER = { name: 'John Homeowner', email: 'john@example.com' };
-
 interface Props {
   onClose?: () => void;
 }
@@ -31,10 +30,21 @@ export function Sidebar({ onClose }: Props) {
   const navigate = useNavigate();
   const location = useLocation();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const { user } = useUser();
+  const { signOut } = useClerk();
+
+  const displayName = user?.fullName ?? user?.primaryEmailAddress?.emailAddress ?? 'User';
+  const email = user?.primaryEmailAddress?.emailAddress ?? '';
+  const avatarLetter = displayName[0]?.toUpperCase() ?? 'U';
 
   function handleNav(path: string) {
     navigate(path);
     onClose?.();
+  }
+
+  function handleSignOut() {
+    setAnchorEl(null);
+    void signOut(() => navigate('/login'));
   }
 
   return (
@@ -107,11 +117,11 @@ export function Sidebar({ onClose }: Props) {
         >
           <ListItemIcon sx={{ minWidth: 36 }}>
             <Avatar sx={{ width: 28, height: 28, bgcolor: '#00897B', fontSize: '0.75rem' }}>
-              {MOCK_USER.name[0]}
+              {avatarLetter}
             </Avatar>
           </ListItemIcon>
           <ListItemText
-            primary={MOCK_USER.name}
+            primary={displayName}
             primaryTypographyProps={{
               fontSize: '0.8125rem',
               fontWeight: 500,
@@ -132,9 +142,9 @@ export function Sidebar({ onClose }: Props) {
         slotProps={{ paper: { sx: { width: 220, ml: 1 } } }}
       >
         <Box sx={{ px: 2, py: 1.5 }}>
-          <Typography variant="subtitle2">{MOCK_USER.name}</Typography>
+          <Typography variant="subtitle2">{displayName}</Typography>
           <Typography variant="caption" color="text.secondary">
-            {MOCK_USER.email}
+            {email}
           </Typography>
         </Box>
         <Divider />
@@ -144,7 +154,7 @@ export function Sidebar({ onClose }: Props) {
           </ListItemIcon>
           <Typography variant="body2">Profile</Typography>
         </MenuItem>
-        <MenuItem onClick={() => setAnchorEl(null)}>
+        <MenuItem onClick={handleSignOut}>
           <ListItemIcon>
             <LogoutIcon fontSize="small" />
           </ListItemIcon>
