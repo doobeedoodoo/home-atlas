@@ -4,8 +4,12 @@ export interface Document {
   id: string;
   name: string;
   status: DocumentStatus;
-  uploadedAt: string;
-  sizeBytes: number;
+  mime_type: string;
+  file_size_bytes: number | null;
+  page_count: number | null;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Citation {

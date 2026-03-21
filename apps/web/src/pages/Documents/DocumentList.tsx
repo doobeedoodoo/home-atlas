@@ -15,20 +15,25 @@ import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Skeleton from '@mui/material/Skeleton';
 import Divider from '@mui/material/Divider';
+import Tooltip from '@mui/material/Tooltip';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined';
-import { useDocuments, useDeleteDocument, useRenameDocument } from '../../hooks/useDocuments';
+import { useDocuments, useDeleteDocument, useRenameDocument, useDownloadDocument } from '../../hooks/useDocuments';
 import type { Document, DocumentStatus } from '../../types';
 
-function formatBytes(bytes: number): string {
+function formatBytes(bytes: number | null): string {
+  if (bytes === null) return '—';
   if (bytes < 1_000_000) return `${(bytes / 1000).toFixed(0)} KB`;
   return `${(bytes / 1_000_000).toFixed(1)} MB`;
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+  return new Date(iso).toLocaleDateString('en-AU', {
+    day: 'numeric', month: 'short', year: 'numeric',
+  });
 }
 
 const STATUS_CHIP: Record<DocumentStatus, { label: string; color: 'success' | 'warning' | 'default' | 'error' }> = {
@@ -42,9 +47,10 @@ interface RowMenuProps {
   document: Document;
   onRename: () => void;
   onDelete: () => void;
+  onDownload: () => void;
 }
 
-function RowMenu({ onRename, onDelete }: RowMenuProps) {
+function RowMenu({ document: doc, onRename, onDelete, onDownload }: RowMenuProps) {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   return (
     <>
@@ -52,6 +58,10 @@ function RowMenu({ onRename, onDelete }: RowMenuProps) {
         <MoreHorizIcon fontSize="small" />
       </IconButton>
       <Menu anchorEl={anchor} open={Boolean(anchor)} onClose={() => setAnchor(null)}>
+        <MenuItem onClick={() => { setAnchor(null); onDownload(); }} disabled={doc.status !== 'ready'}>
+          <ListItemIcon><FileDownloadOutlinedIcon fontSize="small" /></ListItemIcon>
+          <Typography variant="body2">Download</Typography>
+        </MenuItem>
         <MenuItem onClick={() => { setAnchor(null); onRename(); }}>
           <ListItemIcon><DriveFileRenameOutlineIcon fontSize="small" /></ListItemIcon>
           <Typography variant="body2">Rename</Typography>
@@ -69,6 +79,7 @@ export function DocumentList() {
   const { data: documents, isLoading } = useDocuments();
   const deleteDoc = useDeleteDocument();
   const renameDoc = useRenameDocument();
+  const downloadDoc = useDownloadDocument();
 
   const [renameTarget, setRenameTarget] = useState<Document | null>(null);
   const [renameValue, setRenameValue] = useState('');
@@ -88,9 +99,7 @@ export function DocumentList() {
   if (isLoading) {
     return (
       <Stack spacing={1}>
-        {[1, 2, 3].map((i) => (
-          <Skeleton key={i} variant="rounded" height={64} />
-        ))}
+        {[1, 2, 3].map((i) => <Skeleton key={i} variant="rounded" height={64} />)}
       </Stack>
     );
   }
@@ -99,9 +108,7 @@ export function DocumentList() {
     return (
       <Box sx={{ textAlign: 'center', py: 10 }}>
         <PictureAsPdfOutlinedIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
-        <Typography variant="body1" fontWeight={500}>
-          No documents yet
-        </Typography>
+        <Typography variant="body1" fontWeight={500}>No documents yet</Typography>
         <Typography variant="body2" color="text.secondary">
           Upload a PDF to get started
         </Typography>
@@ -123,12 +130,17 @@ export function DocumentList() {
             >
               <PictureAsPdfOutlinedIcon sx={{ color: 'text.secondary', flexShrink: 0 }} />
               <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                <Typography variant="body2" fontWeight={500} noWrap>
-                  {doc.name}
-                </Typography>
+                <Typography variant="body2" fontWeight={500} noWrap>{doc.name}</Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {formatDate(doc.uploadedAt)} · {formatBytes(doc.sizeBytes)}
+                  {formatDate(doc.created_at)} · {formatBytes(doc.file_size_bytes)}
                 </Typography>
+                {doc.status === 'failed' && doc.error_message && (
+                  <Tooltip title={doc.error_message}>
+                    <Typography variant="caption" color="error" sx={{ display: 'block' }} noWrap>
+                      {doc.error_message}
+                    </Typography>
+                  </Tooltip>
+                )}
               </Box>
               <Chip
                 label={STATUS_CHIP[doc.status].label}
@@ -140,6 +152,7 @@ export function DocumentList() {
                 document={doc}
                 onRename={() => openRename(doc)}
                 onDelete={() => deleteDoc.mutate(doc.id)}
+                onDownload={() => downloadDoc.mutate(doc.id)}
               />
             </Stack>
           </Box>

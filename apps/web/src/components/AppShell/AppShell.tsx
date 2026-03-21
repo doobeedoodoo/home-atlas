@@ -11,8 +11,11 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import { Sidebar } from './Sidebar';
 import { SIDEBAR_WIDTH } from '../../theme';
+import { useCurrentUser } from '../../hooks/useCurrentUser';
 
 export function AppShell() {
+  // Syncs the authenticated Clerk user into the local Users table on first load.
+  useCurrentUser();
   const muiTheme = useTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
   const [drawerOpen, setDrawerOpen] = useState(false);

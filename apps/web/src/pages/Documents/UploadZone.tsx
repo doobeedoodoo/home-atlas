@@ -8,8 +8,13 @@ import TextField from '@mui/material/TextField';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
+import Alert from '@mui/material/Alert';
+import CircularProgress from '@mui/material/CircularProgress';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
+import { useUploadDocument } from '../../hooks/useDocuments';
+
+const MAX_SIZE_BYTES = 50 * 1024 * 1024;
 
 interface Props {
   open: boolean;
@@ -20,31 +25,50 @@ export function UploadZone({ open, onClose }: Props) {
   const [dragging, setDragging] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState('');
+  const [validationError, setValidationError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const upload = useUploadDocument();
+
+  function selectFile(f: File) {
+    if (f.type !== 'application/pdf') {
+      setValidationError('Only PDF files are supported.');
+      return;
+    }
+    if (f.size > MAX_SIZE_BYTES) {
+      setValidationError('File exceeds the 50 MB limit.');
+      return;
+    }
+    setValidationError(null);
+    setFile(f);
+    if (!name) setName(f.name.replace(/\.pdf$/i, ''));
+  }
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault();
     setDragging(false);
     const dropped = e.dataTransfer.files[0];
-    if (dropped?.type === 'application/pdf') {
-      setFile(dropped);
-      if (!name) setName(dropped.name.replace('.pdf', ''));
-    }
+    if (dropped) selectFile(dropped);
   }
 
   function handleFileInput(e: React.ChangeEvent<HTMLInputElement>) {
     const selected = e.target.files?.[0];
-    if (selected) {
-      setFile(selected);
-      if (!name) setName(selected.name.replace('.pdf', ''));
-    }
+    if (selected) selectFile(selected);
   }
 
   function handleClose() {
+    if (upload.isPending) return;
     setFile(null);
     setName('');
     setDragging(false);
+    setValidationError(null);
+    upload.reset();
     onClose();
+  }
+
+  async function handleUpload() {
+    if (!file || !name.trim()) return;
+    await upload.mutateAsync({ file, name: name.trim() });
+    handleClose();
   }
 
   return (
@@ -57,17 +81,19 @@ export function UploadZone({ open, onClose }: Props) {
             onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
             onDragLeave={() => setDragging(false)}
             onDrop={handleDrop}
-            onClick={() => inputRef.current?.click()}
+            onClick={() => !upload.isPending && inputRef.current?.click()}
             sx={{
               border: '2px dashed',
               borderColor: dragging ? 'primary.main' : 'divider',
               borderRadius: 2,
               p: 4,
               textAlign: 'center',
-              cursor: 'pointer',
+              cursor: upload.isPending ? 'default' : 'pointer',
               bgcolor: dragging ? 'rgba(0,137,123,0.04)' : 'background.default',
               transition: 'all 0.15s',
-              '&:hover': { borderColor: 'primary.light', bgcolor: 'rgba(0,137,123,0.04)' },
+              '&:hover': upload.isPending
+                ? {}
+                : { borderColor: 'primary.light', bgcolor: 'rgba(0,137,123,0.04)' },
             }}
           >
             <input
@@ -80,9 +106,7 @@ export function UploadZone({ open, onClose }: Props) {
             {file ? (
               <Stack alignItems="center" spacing={1}>
                 <InsertDriveFileOutlinedIcon color="primary" sx={{ fontSize: 36 }} />
-                <Typography variant="body2" fontWeight={500}>
-                  {file.name}
-                </Typography>
+                <Typography variant="body2" fontWeight={500}>{file.name}</Typography>
                 <Typography variant="caption" color="text.secondary">
                   {(file.size / 1_000_000).toFixed(1)} MB
                 </Typography>
@@ -100,20 +124,33 @@ export function UploadZone({ open, onClose }: Props) {
             )}
           </Box>
 
+          {validationError && <Alert severity="error">{validationError}</Alert>}
+          {upload.isError && (
+            <Alert severity="error">
+              {upload.error instanceof Error ? upload.error.message : 'Upload failed'}
+            </Alert>
+          )}
+
           {/* Document name */}
           <TextField
             label="Document name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             fullWidth
+            disabled={upload.isPending}
             helperText="Give it a descriptive name so you can find it later"
           />
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={handleClose}>Cancel</Button>
-        <Button variant="contained" disabled={!file || !name.trim()} onClick={handleClose}>
-          Upload
+        <Button onClick={handleClose} disabled={upload.isPending}>Cancel</Button>
+        <Button
+          variant="contained"
+          disabled={!file || !name.trim() || upload.isPending}
+          onClick={handleUpload}
+          startIcon={upload.isPending ? <CircularProgress size={16} color="inherit" /> : null}
+        >
+          {upload.isPending ? 'Uploading…' : 'Upload'}
         </Button>
       </DialogActions>
     </Dialog>
