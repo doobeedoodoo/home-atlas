@@ -14,7 +14,7 @@ import Divider from '@mui/material/Divider';
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import LogoutIcon from '@mui/icons-material/Logout';
-import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import { SIDEBAR_WIDTH } from '../../theme';
 
 const NAV_ITEMS = [
@@ -137,9 +137,9 @@ export function Sidebar({ onClose }: Props) {
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={() => setAnchorEl(null)}
-        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
         transformOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-        slotProps={{ paper: { sx: { width: 220, ml: 1 } } }}
+        slotProps={{ paper: { sx: { minWidth: 220, maxWidth: 360 } } }}
       >
         <Box sx={{ px: 2, py: 1.5 }}>
           <Typography variant="subtitle2">{displayName}</Typography>
@@ -148,11 +148,11 @@ export function Sidebar({ onClose }: Props) {
           </Typography>
         </Box>
         <Divider />
-        <MenuItem sx={{ mt: 0.5 }}>
+        <MenuItem sx={{ mt: 0.5 }} onClick={() => { setAnchorEl(null); navigate('/settings'); }}>
           <ListItemIcon>
-            <PersonOutlineIcon fontSize="small" />
+            <SettingsOutlinedIcon fontSize="small" />
           </ListItemIcon>
-          <Typography variant="body2">Profile</Typography>
+          <Typography variant="body2">Settings</Typography>
         </MenuItem>
         <MenuItem onClick={handleSignOut}>
           <ListItemIcon>

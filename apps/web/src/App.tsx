@@ -3,6 +3,7 @@ import { useAuth } from '@clerk/react';
 import { AppShell } from './components/AppShell/AppShell';
 import { DocumentsPage } from './pages/Documents/DocumentsPage';
 import { ChatPage } from './pages/Chat/ChatPage';
+import { SettingsPage } from './pages/Settings/SettingsPage';
 import { SignInPage } from './pages/Auth/SignInPage';
 import { SignUpPage } from './pages/Auth/SignUpPage';
 
@@ -28,6 +29,7 @@ export default function App() {
         <Route index element={<Navigate to="/documents" replace />} />
         <Route path="/documents" element={<DocumentsPage />} />
         <Route path="/chat" element={<ChatPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
       </Route>
     </Routes>
   );
