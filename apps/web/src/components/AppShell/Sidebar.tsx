@@ -148,7 +148,7 @@ export function Sidebar({ onClose }: Props) {
           </Typography>
         </Box>
         <Divider />
-        <MenuItem sx={{ mt: 0.5 }} onClick={() => { setAnchorEl(null); navigate('/settings'); }}>
+        <MenuItem sx={{ mt: 0.5 }} onClick={() => { setAnchorEl(null); navigate('/settings'); onClose?.(); }}>
           <ListItemIcon>
             <SettingsOutlinedIcon fontSize="small" />
           </ListItemIcon>

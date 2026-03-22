@@ -3,6 +3,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
+import Drawer from '@mui/material/Drawer';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Box from '@mui/material/Box';
@@ -10,6 +11,8 @@ import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import Alert from '@mui/material/Alert';
 import CircularProgress from '@mui/material/CircularProgress';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
 import { useUploadDocument } from '../../hooks/useDocuments';
@@ -28,6 +31,8 @@ export function UploadZone({ open, onClose }: Props) {
   const [validationError, setValidationError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const upload = useUploadDocument();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   function selectFile(f: File) {
     if (f.type !== 'application/pdf') {
@@ -71,87 +76,121 @@ export function UploadZone({ open, onClose }: Props) {
     handleClose();
   }
 
+  const dropZone = (
+    <Box
+      onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+      onDragLeave={() => setDragging(false)}
+      onDrop={handleDrop}
+      onClick={() => !upload.isPending && inputRef.current?.click()}
+      sx={{
+        border: '2px dashed',
+        borderColor: dragging ? 'primary.main' : 'divider',
+        borderRadius: 2,
+        p: 4,
+        textAlign: 'center',
+        cursor: upload.isPending ? 'default' : 'pointer',
+        bgcolor: dragging ? 'rgba(0,137,123,0.04)' : 'background.default',
+        transition: 'all 0.15s',
+        '&:hover': upload.isPending
+          ? {}
+          : { borderColor: 'primary.light', bgcolor: 'rgba(0,137,123,0.04)' },
+      }}
+    >
+      <input
+        ref={inputRef}
+        type="file"
+        accept="application/pdf"
+        hidden
+        onChange={handleFileInput}
+      />
+      {file ? (
+        <Stack alignItems="center" spacing={1}>
+          <InsertDriveFileOutlinedIcon color="primary" sx={{ fontSize: 36 }} />
+          <Typography variant="body2" fontWeight={500}>{file.name}</Typography>
+          <Typography variant="caption" color="text.secondary">
+            {(file.size / 1_000_000).toFixed(1)} MB
+          </Typography>
+        </Stack>
+      ) : (
+        <Stack alignItems="center" spacing={1}>
+          <UploadFileIcon sx={{ fontSize: 36, color: 'text.secondary' }} />
+          <Typography variant="body2" fontWeight={500}>
+            {isMobile ? 'Tap to browse' : 'Drag and drop a PDF here'}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {isMobile ? 'max 50 MB' : 'or click to browse · max 50 MB'}
+          </Typography>
+        </Stack>
+      )}
+    </Box>
+  );
+
+  const formContent = (
+    <Stack spacing={3}>
+      {dropZone}
+      {validationError && <Alert severity="error">{validationError}</Alert>}
+      {upload.isError && (
+        <Alert severity="error">
+          {upload.error instanceof Error ? upload.error.message : 'Upload failed'}
+        </Alert>
+      )}
+      <TextField
+        label="Document name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        fullWidth
+        disabled={upload.isPending}
+        helperText="Give it a descriptive name so you can find it later"
+      />
+    </Stack>
+  );
+
+  const actions = (
+    <>
+      <Button onClick={handleClose} disabled={upload.isPending}>Cancel</Button>
+      <Button
+        variant="contained"
+        disabled={!file || !name.trim() || upload.isPending}
+        onClick={handleUpload}
+        startIcon={upload.isPending ? <CircularProgress size={16} color="inherit" /> : null}
+      >
+        {upload.isPending ? 'Uploading…' : 'Upload'}
+      </Button>
+    </>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer
+        anchor="bottom"
+        open={open}
+        onClose={handleClose}
+        PaperProps={{ sx: { height: '70vh', borderRadius: '16px 16px 0 0', px: 2, pb: 3 } }}
+      >
+        {/* Drag handle */}
+        <Box sx={{ display: 'flex', justifyContent: 'center', pt: 1.5, pb: 1 }}>
+          <Box sx={{ width: 36, height: 4, borderRadius: 2, bgcolor: 'divider' }} />
+        </Box>
+
+        <Typography variant="h6" sx={{ pb: 2 }}>Upload document</Typography>
+
+        <Box sx={{ overflowY: 'auto', flexGrow: 1 }}>{formContent}</Box>
+
+        <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ pt: 2 }}>
+          {actions}
+        </Stack>
+      </Drawer>
+    );
+  }
+
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle>Upload document</DialogTitle>
       <DialogContent>
-        <Stack spacing={3} sx={{ pt: 1 }}>
-          {/* Drop zone */}
-          <Box
-            onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
-            onDragLeave={() => setDragging(false)}
-            onDrop={handleDrop}
-            onClick={() => !upload.isPending && inputRef.current?.click()}
-            sx={{
-              border: '2px dashed',
-              borderColor: dragging ? 'primary.main' : 'divider',
-              borderRadius: 2,
-              p: 4,
-              textAlign: 'center',
-              cursor: upload.isPending ? 'default' : 'pointer',
-              bgcolor: dragging ? 'rgba(0,137,123,0.04)' : 'background.default',
-              transition: 'all 0.15s',
-              '&:hover': upload.isPending
-                ? {}
-                : { borderColor: 'primary.light', bgcolor: 'rgba(0,137,123,0.04)' },
-            }}
-          >
-            <input
-              ref={inputRef}
-              type="file"
-              accept="application/pdf"
-              hidden
-              onChange={handleFileInput}
-            />
-            {file ? (
-              <Stack alignItems="center" spacing={1}>
-                <InsertDriveFileOutlinedIcon color="primary" sx={{ fontSize: 36 }} />
-                <Typography variant="body2" fontWeight={500}>{file.name}</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {(file.size / 1_000_000).toFixed(1)} MB
-                </Typography>
-              </Stack>
-            ) : (
-              <Stack alignItems="center" spacing={1}>
-                <UploadFileIcon sx={{ fontSize: 36, color: 'text.secondary' }} />
-                <Typography variant="body2" fontWeight={500}>
-                  Drag and drop a PDF here
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  or click to browse · max 50 MB
-                </Typography>
-              </Stack>
-            )}
-          </Box>
-
-          {validationError && <Alert severity="error">{validationError}</Alert>}
-          {upload.isError && (
-            <Alert severity="error">
-              {upload.error instanceof Error ? upload.error.message : 'Upload failed'}
-            </Alert>
-          )}
-
-          {/* Document name */}
-          <TextField
-            label="Document name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            fullWidth
-            disabled={upload.isPending}
-            helperText="Give it a descriptive name so you can find it later"
-          />
-        </Stack>
+        <Box sx={{ pt: 1 }}>{formContent}</Box>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={handleClose} disabled={upload.isPending}>Cancel</Button>
-        <Button
-          variant="contained"
-          disabled={!file || !name.trim() || upload.isPending}
-          onClick={handleUpload}
-          startIcon={upload.isPending ? <CircularProgress size={16} color="inherit" /> : null}
-        >
-          {upload.isPending ? 'Uploading…' : 'Upload'}
-        </Button>
+        {actions}
       </DialogActions>
     </Dialog>
   );
