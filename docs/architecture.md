@@ -106,7 +106,7 @@ User selects PDF + enters name
       → batch-embeds via OpenAI text-embedding-3-small
       → bulk inserts document_chunks + embeddings into Neon (pgvector)
       → updates document status → ready
-  → client polling detects status change → UI badge goes green
+  → client refreshes manually (interim) or receives SSE push event (planned — see features/document-status-sse.md)
 ```
 
 ### RAG Chat Query
@@ -157,9 +157,26 @@ User submits question
 
 **pgvector over a dedicated vector DB.** Keeping embeddings in Neon alongside relational data means a single database connection, transactional consistency between document status and chunks, and no additional service to operate. At portfolio scale (< 100k vectors) ivfflat performs well.
 
-**SSE over WebSockets for chat streaming.** Server-sent events are unidirectional, HTTP/1.1 compatible, and trivial to implement in Express. WebSockets are only introduced in Phase 1 for document processing status updates, where bidirectional communication is needed.
+**SSE over WebSockets for chat streaming.** Server-sent events are unidirectional, HTTP/1.1 compatible, and trivial to implement in Express. SSE will also be used for document processing status updates (see features/document-status-sse.md) — no WebSockets are needed anywhere in the stack.
 
 **Clerk for passwordless OTP.** Supports email code and SMS code out of the box via dashboard toggle. Backend JWT validation is a single middleware line — swappable for Cognito with no application logic changes if migrating to AWS.
+```
+
+---
+
+## Document Status SSE (Planned)
+
+> Current state: the Documents page has a manual refresh button. Polling was removed to avoid unnecessary API load.
+> Planned: replace with server-pushed status updates via SSE. See `features/document-status-sse.md` for the full design.
+
+At a high level, the worker will emit events through a singleton `SseManager` after each BullMQ job completes or fails. A new `GET /api/v1/documents/status-stream` endpoint holds the connection open per authenticated user and writes those events as they arrive. The client opens this stream once on mount, listens for `document:ready` / `document:failed` events, and calls `queryClient.invalidateQueries(['documents'])` — a single targeted refetch with zero polling.
+
+```
+BullMQ job completes / fails
+  → worker calls sseManager.emit(userId, 'document:ready' | 'document:failed', { documentId })
+  → GET /api/v1/documents/status-stream writes event to all open Response objects for that user
+  → browser EventSource receives event
+  → queryClient.invalidateQueries(['documents']) → one refetch, UI updates
 ```
 
 ---

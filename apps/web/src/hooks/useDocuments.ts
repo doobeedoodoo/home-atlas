@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@clerk/react';
-import type { Document } from '../types';
+
 import {
   listDocuments,
   renameDocument,
@@ -11,9 +11,6 @@ import {
   getDownloadUrl,
 } from '../api/documents';
 
-function needsPolling(docs: Document[] | undefined): boolean {
-  return docs?.some((d) => d.status === 'pending' || d.status === 'processing') ?? false;
-}
 
 export function useDocuments() {
   const { getToken } = useAuth();
@@ -24,8 +21,10 @@ export function useDocuments() {
       if (!token) throw new Error('No auth token');
       return listDocuments(token);
     },
-    // Poll every 3 s while any document is still being ingested
-    refetchInterval: (query) => (needsPolling(query.state.data) ? 3000 : false),
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+    // TODO(SSE): Replace manual refresh with server-pushed status updates.
+    // See docs/architecture.md § "Document Status SSE (Planned)" for the design.
   });
 }
 
@@ -74,7 +73,7 @@ export function useUploadDocument() {
       // Step 2: PUT file directly to R2 (no auth header)
       await uploadFileToR2(uploadUrl, file);
 
-      // Step 3: Mark document as processing, trigger ingestion job (Slice 3)
+      // Step 3: Mark document as processing, trigger ingestion job
       return confirmUpload(token, documentId);
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['documents'] }),
