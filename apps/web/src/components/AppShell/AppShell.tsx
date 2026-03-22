@@ -56,7 +56,7 @@ export function AppShell() {
           ml: isMobile ? 0 : `${SIDEBAR_WIDTH}px`,
           mt: isMobile ? '48px' : 0,
           bgcolor: 'background.default',
-          minHeight: '100vh',
+          minHeight: isMobile ? 'calc(100vh - 48px)' : '100vh',
         }}
       >
         <Outlet />

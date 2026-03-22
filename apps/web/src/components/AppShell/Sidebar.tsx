@@ -56,6 +56,7 @@ export function Sidebar({ onClose }: Props) {
         display: 'flex',
         flexDirection: 'column',
         flexShrink: 0,
+        overflow: 'hidden',
       }}
     >
       {/* Brand */}
@@ -71,7 +72,7 @@ export function Sidebar({ onClose }: Props) {
       <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)' }} />
 
       {/* Nav items */}
-      <List sx={{ px: 1.5, py: 1.5, flexGrow: 1 }}>
+      <List sx={{ px: 1.5, py: 1.5, flexGrow: 1, overflowY: 'auto' }}>
         {NAV_ITEMS.map(({ label, icon: Icon, path }) => {
           const selected = location.pathname.startsWith(path);
           return (
