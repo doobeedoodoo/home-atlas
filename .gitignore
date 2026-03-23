@@ -33,3 +33,6 @@ coverage/
 
 # Knex
 *.sqlite
+
+# Script output
+apps/worker/src/scripts/output/
