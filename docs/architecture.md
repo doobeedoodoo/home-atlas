@@ -53,7 +53,7 @@ flowchart TB
         direction LR
         NEON["Neon\nPostgreSQL 16 + pgvector\nsequential cosine scan"]
         R2["Cloudflare R2\nPDF storage\nPresigned URLs"]
-        REDIS["Upstash Redis\nBullMQ queue\nJob state"]
+        REDIS["Railway Redis\nBullMQ queue\nJob state"]
     end
 
     subgraph CI["CI / CD"]
@@ -139,7 +139,7 @@ User submits question
 | **Clerk** | OTP issuance (email + phone); JWT signing; session management | Free (10k MAU) |
 | **Neon** | PostgreSQL 16 + pgvector; stores all relational data + vector embeddings | Free (0.5 GB) |
 | **Cloudflare R2** | PDF blob storage; presigned upload + download URLs; no egress fees | Free (10 GB) |
-| **Upstash Redis** | BullMQ job queue backing store; job state + retry tracking | Free (10k cmds/day) |
+| **Railway Redis** | BullMQ job queue backing store; job state + retry tracking | Included with Railway |
 | **Anthropic Claude** | LLM completions; streamed grounded answers; citation generation | ~$3–5 USD/mo |
 | **OpenAI** | `text-embedding-3-small`; query + ingestion embeddings | ~$1 USD/mo |
 | **LangFuse** | LLM trace logging; prompt versioning; RAG eval datasets | Free (50k obs/mo) |
@@ -153,7 +153,7 @@ User submits question
 
 **Direct-to-R2 upload.** The browser PUTs the file binary directly to Cloudflare R2 using a presigned URL. The API never proxies file bytes — this keeps the API process lean and avoids Railway bandwidth limits.
 
-**BullMQ over SQS.** Ingestion is async and retriable without AWS. BullMQ backed by Upstash Redis provides job queuing, retries with exponential backoff, dead-letter visibility, and an optional dashboard — all on the free tier.
+**BullMQ over SQS.** Ingestion is async and retriable without AWS. BullMQ backed by Railway Redis provides job queuing, retries with exponential backoff, dead-letter visibility, and an optional dashboard — all within the same Railway project.
 
 **pgvector over a dedicated vector DB.** Keeping embeddings in Neon alongside relational data means a single database connection, transactional consistency between document status and chunks, and no additional service to operate. At current scale a sequential scan is used; an ivfflat index can be added in a later migration if chunk count grows into the tens of thousands.
 
@@ -190,7 +190,7 @@ When migrating to a full AWS CDK stack, each service maps directly to an AWS equ
 | Neon | RDS PostgreSQL 16 | `DATABASE_URL` env var only |
 | Cloudflare R2 | S3 | Remove custom endpoint from S3 client |
 | Clerk | Cognito (PKCE) | Swap auth middleware; update `clerk_user_id` → `cognito_sub` column |
-| Upstash Redis + BullMQ | SQS + ECS worker | Rewrite worker consumer entrypoint only; job handler unchanged |
+| Railway Redis + BullMQ | SQS + ECS worker | Rewrite worker consumer entrypoint only; job handler unchanged |
 | Railway (API) | ECS Fargate + ALB | Same Docker image, new deployment target |
 | Vercel | CloudFront + S3 | `npm run build` output → S3 bucket |
 | Railway env vars | Secrets Manager | CDK injects at task definition time |

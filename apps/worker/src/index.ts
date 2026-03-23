@@ -40,14 +40,10 @@ async function handleIngestion(job: Job<IngestionJobData>): Promise<void> {
     // 2 — Extract text
     const { text, numpages } = await pdf(pdfBuffer);
 
-    console.log('###', { text }) // TODO: remove
-
     if (!text.trim()) throw new Error('PDF contains no extractable text');
 
     // 3 — Split into chunks
     const docs = await splitter.createDocuments([text]);
-
-    console.log('###', { docs }) // TODO: remove
 
     logger.info({ documentId, chunkCount: docs.length }, 'Splitting complete');
 

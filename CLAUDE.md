@@ -40,7 +40,7 @@ home-atlas/
 | **Observability** | LangFuse | LLM tracing, prompt versioning, cost tracking |
 | **Auth** | Clerk | JWTs, email verification, hosted UI components |
 | **File Storage** | Cloudflare R2 | S3-compatible API; free up to 10 GB, no egress fees |
-| **Job Queue** | BullMQ + Upstash Redis | Async ingestion jobs with retries |
+| **Job Queue** | BullMQ + Railway Redis | Async ingestion jobs with retries |
 | **PDF Processing** | `pdf-parse` + LangChain text splitters | Chunked ingestion |
 | **API Hosting** | Railway | Auto-deploy from GitHub; free tier available |
 | **Frontend Hosting** | Vercel | Auto-deploy from GitHub; free for personal projects |
