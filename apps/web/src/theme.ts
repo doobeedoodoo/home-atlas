@@ -6,7 +6,7 @@ export const theme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#00897B',
+      main: '#00674F',
       light: '#4DB6AC',
       dark: '#00695C',
       contrastText: '#ffffff',
@@ -27,7 +27,7 @@ export const theme = createTheme({
     h6: { fontWeight: 600, letterSpacing: '-0.01em' },
     subtitle1: { fontWeight: 500 },
     subtitle2: { fontWeight: 600 },
-    body2: { fontSize: '0.8125rem' },
+    body2: { fontSize: '1.25rem' },
   },
   shape: {
     borderRadius: 8,
