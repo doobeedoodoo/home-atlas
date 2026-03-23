@@ -90,14 +90,14 @@ _Uploaded PDFs are processed into searchable vector chunks._
 
 - Set up Upstash Redis; configure BullMQ `ingestion` queue in `packages/db`
 - Build `apps/worker`: BullMQ consumer process, connects to same Neon + Redis
-- Write migration: `document_chunks` table with pgvector column + ivfflat index
+- Write migration: `DocumentChunks` table with pgvector column (no index — sequential scan is sufficient at current scale)
 - Wire `POST /api/v1/documents/:id/confirm` to enqueue a BullMQ job
 - Implement ingestion job handler:
   - Download PDF from R2
   - Extract text with `pdf-parse`
   - Split with `RecursiveCharacterTextSplitter` (512 tokens, 50 overlap)
   - Batch embed chunks with OpenAI `text-embedding-3-small`
-  - Bulk insert into `document_chunks`
+  - Bulk insert into `DocumentChunks`
   - Update document status → `ready` (or `failed` with error message)
 - Deploy worker as second Railway service
 - Frontend: status badge now transitions `pending → processing → ready`

@@ -39,7 +39,7 @@ documents (
 CREATE INDEX documents_user_id_idx ON documents(user_id);
 CREATE INDEX documents_status_idx  ON documents(status);
 
-document_chunks (
+DocumentChunks (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   document_id  UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
   user_id      UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -54,12 +54,12 @@ document_chunks (
   UNIQUE (document_id, chunk_index)
 );
 
-CREATE INDEX document_chunks_document_id_idx ON document_chunks(document_id);
-CREATE INDEX document_chunks_user_id_idx     ON document_chunks(user_id);
-CREATE INDEX document_chunks_embedding_idx
-  ON document_chunks USING ivfflat (embedding vector_cosine_ops)
+CREATE INDEX DocumentChunks_document_id_idx ON DocumentChunks(document_id);
+CREATE INDEX DocumentChunks_user_id_idx     ON DocumentChunks(user_id);
+CREATE INDEX DocumentChunks_embedding_idx
+  ON DocumentChunks USING ivfflat (embedding vector_cosine_ops)
   WITH (lists = 100);
-CREATE INDEX document_chunks_content_tsv_idx ON document_chunks USING gin (content_tsv);
+CREATE INDEX DocumentChunks_content_tsv_idx ON DocumentChunks USING gin (content_tsv);
 ```
 
 ---

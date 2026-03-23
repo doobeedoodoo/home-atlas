@@ -51,7 +51,7 @@ flowchart TB
 
     subgraph DATA["Data Layer"]
         direction LR
-        NEON["Neon\nPostgreSQL 16 + pgvector\nivfflat cosine index"]
+        NEON["Neon\nPostgreSQL 16 + pgvector\nsequential cosine scan"]
         R2["Cloudflare R2\nPDF storage\nPresigned URLs"]
         REDIS["Upstash Redis\nBullMQ queue\nJob state"]
     end
@@ -104,7 +104,7 @@ User selects PDF + enters name
       → extracts text via pdf-parse
       → splits into 512-token chunks (50 overlap)
       → batch-embeds via OpenAI text-embedding-3-small
-      → bulk inserts document_chunks + embeddings into Neon (pgvector)
+      → bulk inserts DocumentChunks + embeddings into Neon (pgvector)
       → updates document status → ready
   → client refreshes manually (interim) or receives SSE push event (planned — see features/document-status-sse.md)
 ```
@@ -115,7 +115,7 @@ User selects PDF + enters name
 User submits question
   → POST /api/v1/chat/sessions/:id/messages
   → packages/ai: embed query via OpenAI
-  → pgvector cosine search across user's document_chunks
+  → pgvector cosine search across user's DocumentChunks
       WHERE user_id = ? AND similarity >= 0.75
       ORDER BY embedding <=> $queryVector LIMIT 5
   → assemble grounded prompt (system + top-k chunks + session history)
@@ -155,7 +155,7 @@ User submits question
 
 **BullMQ over SQS.** Ingestion is async and retriable without AWS. BullMQ backed by Upstash Redis provides job queuing, retries with exponential backoff, dead-letter visibility, and an optional dashboard — all on the free tier.
 
-**pgvector over a dedicated vector DB.** Keeping embeddings in Neon alongside relational data means a single database connection, transactional consistency between document status and chunks, and no additional service to operate. At portfolio scale (< 100k vectors) ivfflat performs well.
+**pgvector over a dedicated vector DB.** Keeping embeddings in Neon alongside relational data means a single database connection, transactional consistency between document status and chunks, and no additional service to operate. At current scale a sequential scan is used; an ivfflat index can be added in a later migration if chunk count grows into the tens of thousands.
 
 **SSE over WebSockets for chat streaming.** Server-sent events are unidirectional, HTTP/1.1 compatible, and trivial to implement in Express. SSE will also be used for document processing status updates (see features/document-status-sse.md) — no WebSockets are needed anywhere in the stack.
 

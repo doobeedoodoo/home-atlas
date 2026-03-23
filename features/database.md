@@ -57,7 +57,7 @@ CREATE INDEX documents_status_idx  ON documents(status);
 -- ============================================================
 -- Document Chunks (vector embeddings)
 -- ============================================================
-CREATE TABLE document_chunks (
+CREATE TABLE DocumentChunks (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   document_id  UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
   user_id      UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -71,12 +71,12 @@ CREATE TABLE document_chunks (
   created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE (document_id, chunk_index)
 );
-CREATE INDEX document_chunks_document_id_idx ON document_chunks(document_id);
-CREATE INDEX document_chunks_user_id_idx     ON document_chunks(user_id);
-CREATE INDEX document_chunks_embedding_idx
-  ON document_chunks USING ivfflat (embedding vector_cosine_ops)
+CREATE INDEX DocumentChunks_document_id_idx ON DocumentChunks(document_id);
+CREATE INDEX DocumentChunks_user_id_idx     ON DocumentChunks(user_id);
+CREATE INDEX DocumentChunks_embedding_idx
+  ON DocumentChunks USING ivfflat (embedding vector_cosine_ops)
   WITH (lists = 100);
-CREATE INDEX document_chunks_content_tsv_idx ON document_chunks USING gin (content_tsv);
+CREATE INDEX DocumentChunks_content_tsv_idx ON DocumentChunks USING gin (content_tsv);
 
 -- ============================================================
 -- Chat Sessions
@@ -117,7 +117,7 @@ YYYYMMDDHHMMSS_short_description.ts
 Examples:
 20250101120000_create_users.ts
 20250101120100_create_documents.ts
-20250102090000_create_document_chunks_pgvector.ts
+20250102090000_create_DocumentChunks_pgvector.ts
 20250103100000_create_chat_tables.ts
 ```
 
@@ -132,7 +132,7 @@ Examples:
   ```sql
   SELECT id, content, document_id, page_number,
          1 - (embedding <=> $1) AS similarity
-  FROM document_chunks
+  FROM DocumentChunks
   WHERE user_id = $2
     AND 1 - (embedding <=> $1) >= 0.75
   ORDER BY embedding <=> $1
