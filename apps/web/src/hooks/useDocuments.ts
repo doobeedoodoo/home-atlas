@@ -12,6 +12,8 @@ import {
 } from '../api/documents';
 
 
+const PROCESSING_STATUSES = new Set(['pending', 'processing']);
+
 export function useDocuments() {
   const { getToken } = useAuth();
   return useQuery({
@@ -23,8 +25,14 @@ export function useDocuments() {
     },
     staleTime: 30_000,
     refetchOnWindowFocus: false,
-    // TODO(SSE): Replace manual refresh with server-pushed status updates.
+    // Poll every 3 s while any document is still ingesting; stop once all settle.
+    // TODO(SSE): Replace with server-pushed status updates.
     // See docs/architecture.md § "Document Status SSE (Planned)" for the design.
+    refetchInterval: (query) => {
+      const docs = query.state.data;
+      if (!docs) return false;
+      return docs.some((d) => PROCESSING_STATUSES.has(d.status)) ? 3_000 : false;
+    },
   });
 }
 
