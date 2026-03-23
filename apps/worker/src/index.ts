@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import http from 'http';
 import pino from 'pino';
 import pdf from 'pdf-parse';
 import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
@@ -126,6 +127,18 @@ worker.on('failed', (job, err) => {
 
 worker.on('error', (err) => {
   logger.error({ err }, 'Worker error');
+});
+
+// Health check: "/health/live"
+const PORT = process.env.PORT ?? 3001;
+http.createServer((req, res) => {
+  if (req.url === '/health/live') {
+    res.writeHead(200).end('ok');
+  } else {
+    res.writeHead(404).end();
+  }
+}).listen(PORT, () => {
+  logger.info({ port: PORT }, 'Health server listening');
 });
 
 logger.info('Ingestion worker started');
