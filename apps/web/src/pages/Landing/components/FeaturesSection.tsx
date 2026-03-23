@@ -68,7 +68,7 @@ export function FeaturesSection() {
       <Box sx={{ maxWidth: 1100, mx: 'auto', px: { xs: 3, md: 4 } }}>
         <Stack spacing={2} alignItems="center" textAlign="center" mb={8}>
           <Typography variant="h4" fontWeight={800} letterSpacing="-0.02em">
-            Everything your home needs
+            Everything your home knows
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 480, lineHeight: 1.75 }}>
             One place for every document, every answer, every detail about your property.
