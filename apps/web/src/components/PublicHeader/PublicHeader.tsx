@@ -43,7 +43,7 @@ export function PublicHeader({ transparent = false, showAuthButtons = true }: Pr
         >
           <img src="/images/logo.png" alt="HomeAtlas logo" style={{ height: isMobile ? 32 : 48, width: 'auto' }} />
           <Typography variant="h5" fontWeight={700} color="text.primary"
-            sx={{ fontSize: { xs: '1.1rem', md: '1.5rem' } }}
+            sx={{ display: { xs: 'none', sm: 'block' }, fontSize: { sm: '1.1rem', md: '1.5rem' } }}
           >
             HomeAtlas
           </Typography>
