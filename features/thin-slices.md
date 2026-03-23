@@ -17,7 +17,7 @@ _No features, just a working deploy pipeline end-to-end._
 - Connect Neon as the production database, run migration
 - Set up GitHub Actions CI (lint + typecheck + test on push)
 
-**Done when:** `GET /health/ready` returns 200 in production and the Vercel frontend loads.
+**Done when:** `GET /health/ready` returns 200 in production and the frontend in Vercel loads.
 
 ---
 
