@@ -1,6 +1,6 @@
 # HomeAtlas
 
-AI-powered knowledge repository for your home. Upload documents about your home - appliance manuals, architectural plans, insurance policies — then ask questions about them in plain language.
+An AI-powered knowledge repository for your home. Upload documents about your home - appliance manuals, architectural plans, insurance policies — then ask questions about them in plain language.
 
 ## Stack
 
