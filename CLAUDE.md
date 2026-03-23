@@ -35,7 +35,7 @@ home-atlas/
 | **Frontend** | React 19 + TypeScript + Vite | Material UI v7, React Query |
 | **Database** | Neon (serverless PostgreSQL 16 + pgvector) | Free tier; scales to zero |
 | **Migrations** | Knex.js | All schema changes versioned |
-| **AI / RAG** | LangChain.js + Anthropic Claude | claude-sonnet-4-5 as LLM |
+| **AI / RAG** | LangChain.js + configurable LLM | Provider set via `LLM_PROVIDER` env var: `anthropic` (default), `openai`, `google`; model set via `LLM_MODEL` |
 | **Embeddings** | `text-embedding-3-small` (OpenAI) | 1536-dim, stored in pgvector |
 | **Observability** | LangFuse | LLM tracing, prompt versioning, cost tracking |
 | **Auth** | Clerk | JWTs, email verification, hosted UI components |

@@ -113,13 +113,18 @@ _Users can ask questions and get cited answers from their documents._
 - Create `packages/ai`: LangChain RAG pipeline, prompt templates, citation parser
 - Write migration: `chat_sessions` and `chat_messages` tables
 - Integrate LangFuse — wrap every LLM call in a trace
+- **Configurable LLM provider** — a factory in `packages/ai` reads two env vars and returns the correct LangChain chat model:
+  - `LLM_PROVIDER` — `anthropic` (default) | `openai` | `google`
+  - `LLM_MODEL` — model ID for the chosen provider (e.g. `claude-sonnet-4-5`, `gpt-4o`, `gemini-1.5-pro`)
+  - All three providers implement LangChain's `.stream()` interface, so the RAG pipeline is provider-agnostic
+  - Each provider requires its own API key env var (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_API_KEY`); validate at startup via Zod
 - Implement `POST /api/v1/chat/sessions` — create session
 - Implement `GET /api/v1/chat/sessions/:id` — get session with messages
 - Implement `POST /api/v1/chat/sessions/:id/messages` — the core RAG endpoint:
   - Embed user query
   - pgvector similarity search across **all of the user's document chunks** (no scoping by item or space — the entire library is always in scope)
   - Assemble grounded prompt with top-k context
-  - Stream Claude response via SSE
+  - Stream LLM response token-by-token via SSE (`text/event-stream`) — the HTTP connection stays open and the API pushes `data:` lines as each token arrives; the browser appends tokens in real time
   - Parse citations from response
   - Persist assistant message + citations
 - Build chat UI in `apps/web`:
