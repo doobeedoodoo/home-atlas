@@ -11,6 +11,7 @@ import {
   generateDownloadUrl,
   deleteObject,
 } from '../../../../packages/storage/src';
+import { ingestionQueue } from '../queue';
 
 const router = Router();
 
@@ -81,14 +82,22 @@ router.post(
     const id = req.params['id'] as string;
     const { userId } = getAuth(req);
     const user = await getUserByClerkId(userId!);
-    await getOwnedDoc(id, user.id);
+    const doc = await getOwnedDoc(id, user.id);
 
-    const [doc] = await db('Documents')
+    if (!doc.r2_key) throw new AppError(400, 'Document has no associated file');
+
+    const [updated] = await db('Documents')
       .where({ id })
       .update({ status: 'processing', updated_at: new Date() })
       .returning(SAFE_COLUMNS);
 
-    res.json({ document: doc });
+    await ingestionQueue.add('ingest', {
+      documentId: id,
+      userId: user.id,
+      r2Key: doc.r2_key as string,
+    });
+
+    res.json({ document: updated });
   }),
 );
 

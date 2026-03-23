@@ -1,3 +1,4 @@
+import { Readable } from 'stream';
 import {
   S3Client,
   PutObjectCommand,
@@ -35,6 +36,18 @@ export async function generateDownloadUrl(key: string): Promise<string> {
     new GetObjectCommand({ Bucket: bucket(), Key: key }),
     { expiresIn: 900 },
   );
+}
+
+/** Downloads an object from R2 and returns its contents as a Buffer. */
+export async function downloadObject(key: string): Promise<Buffer> {
+  const response = await getClient().send(new GetObjectCommand({ Bucket: bucket(), Key: key }));
+  const stream = response.Body as Readable;
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    stream.on('data', (chunk: Buffer) => chunks.push(chunk));
+    stream.on('end', () => resolve(Buffer.concat(chunks)));
+    stream.on('error', reject);
+  });
 }
 
 /** Deletes an object from R2. Does not throw if the object is already gone. */

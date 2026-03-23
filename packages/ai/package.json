@@ -1,0 +1,10 @@
+{
+  "name": "@homeatlas/ai",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "main": "src/index.ts",
+  "license": "ISC",
+  "dependencies": {
+    "openai": "^4.104.0"
+  }
+}
