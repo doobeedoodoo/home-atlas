@@ -7,9 +7,9 @@ import StarIcon from '@mui/icons-material/Star';
 const TESTIMONIAL = {
   quote:
     'I used to keep a drawer full of manuals and warranties I could never find when I needed them. HomeAtlas changed that completely — I asked how to descale our coffee maker and had the answer in seconds.',
-  name: 'Mac Sta Maria',
-  role: 'Homeowner, Brisbane',
-  initials: 'MS',
+  name: 'Kapitan Tutan',
+  role: 'Philippines',
+  initials: 'KT',
 };
 
 function StarRating({ count = 5 }: { count?: number }) {
@@ -24,7 +24,7 @@ function StarRating({ count = 5 }: { count?: number }) {
 
 export function TestimonialsSection() {
   return (
-    <Box component="section" id="testimonials" sx={{ bgcolor: 'background.paper', py: { xs: 12, md: 16 } }}>
+    <Box component="section" id="testimonials" sx={{ bgcolor: 'background.paper', pt: { xs: 6, md: 16 }, pb: { xs: 12, md: 16 } }}>
       <Box sx={{ maxWidth: 1100, mx: 'auto', px: { xs: 3, md: 4 } }}>
         <Stack spacing={2} alignItems="center" textAlign="center" mb={8}>
           <Typography variant="h4" fontWeight={800} letterSpacing="-0.02em">
@@ -67,10 +67,10 @@ export function TestimonialsSection() {
                 {TESTIMONIAL.initials}
               </Avatar>
               <Box textAlign="left">
-                <Typography variant="subtitle2" fontWeight={700}>
+                <Typography variant="body1" fontWeight={700}>
                   {TESTIMONIAL.name}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="body1" color="text.secondary">
                   {TESTIMONIAL.role}
                 </Typography>
               </Box>

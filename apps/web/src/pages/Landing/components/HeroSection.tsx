@@ -16,7 +16,7 @@ export function HeroSection() {
         bgcolor: 'background.default',
       }}
     >
-      <Box sx={{ maxWidth: 1100, mx: 'auto', px: { xs: 3, md: 4 }, py: { xs: 10, md: 14 }, width: '100%' }}>
+      <Box sx={{ maxWidth: 1100, mx: 'auto', px: { xs: 3, md: 4 }, py: { xs: 6, md: 14 }, width: '100%' }}>
         <Box
           sx={{
             display: 'grid',
@@ -35,10 +35,10 @@ export function HeroSection() {
                 lineHeight={1.15}
                 sx={{ fontSize: { xs: '2.25rem', md: '2.75rem', lg: '3rem' } }}
               >
-                Your personal guide to your home.
+                Your home's AI knowledge hub
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.75 }}>
-                HomeAtlas keeps every document in one place — then lets you ask questions about any of it.
+                HomeAtlas keeps your documents in one place — then lets you ask questions about any of it.
               </Typography>
             </Stack>
 

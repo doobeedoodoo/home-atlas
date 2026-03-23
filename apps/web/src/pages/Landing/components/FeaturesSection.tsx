@@ -17,13 +17,13 @@ const FEATURES: Feature[] = [
     Icon: ArchiveOutlinedIcon,
     title: 'Capture everything',
     description:
-      'Upload manuals, warranties, receipts, and renovation records — all your home\'s paperwork, in one place.',
+      'Upload manuals, warranties, rental contracts, and renovation records — all your home\'s paperwork, in one place.',
   },
   {
     Icon: ChatBubbleOutlineIcon,
-    title: 'Ask anything',
+    title: 'Powered by AI',
     description:
-      'Get instant, accurate answers powered by AI that reads your actual documents — not generic advice from the web.',
+      'Ask anything and get instant, accurate answers.',
   },
   {
     Icon: CottageOutlinedIcon,
@@ -64,7 +64,7 @@ function FeatureCard({ Icon, title, description }: Feature) {
 
 export function FeaturesSection() {
   return (
-    <Box component="section" id="features" sx={{ bgcolor: 'grey.50', py: { xs: 12, md: 16 } }}>
+    <Box component="section" id="features" sx={{ bgcolor: 'grey.50', py: { xs: 6, md: 16 } }}>
       <Box sx={{ maxWidth: 1100, mx: 'auto', px: { xs: 3, md: 4 } }}>
         <Stack spacing={2} alignItems="center" textAlign="center" mb={8}>
           <Typography variant="h4" fontWeight={800} letterSpacing="-0.02em">
