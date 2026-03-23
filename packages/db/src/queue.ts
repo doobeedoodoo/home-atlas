@@ -18,7 +18,8 @@ function getConnectionOptions() {
         port: Number(url.port) || 6379,
         password: url.password || undefined,
         username: url.username || undefined,
-        tls: url.protocol === 'rediss:' ? {} : undefined,
+        tls: url.protocol === 'rediss:' ? { rejectUnauthorized: false } : undefined,
+        enableReadyCheck: false,
         maxRetriesPerRequest: null as null,
     };
 }

@@ -116,6 +116,10 @@ async function handleIngestion(job: Job<IngestionJobData>): Promise<void> {
 
 const worker = createIngestionWorker(handleIngestion);
 
+worker.on('ready', () => {
+  logger.info('Worker connected to Redis');
+});
+
 worker.on('completed', (job) => {
   logger.info({ jobId: job.id }, 'Job completed');
 });
@@ -125,8 +129,7 @@ worker.on('failed', (job, err) => {
 });
 
 worker.on('error', (err) => {
-  logger.error({ err }, 'Worker error');
+  logger.error({ err }, 'Worker connection error');
 });
-
 
 logger.info('Ingestion worker started');
