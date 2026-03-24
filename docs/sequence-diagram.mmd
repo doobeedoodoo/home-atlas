@@ -1,0 +1,201 @@
+sequenceDiagram
+    actor User
+    participant FE as React Frontend<br/>(Vite + React 19)
+    participant Clerk as Clerk
+    participant API as Express API<br/>(Railway)
+    participant DB as Neon PostgreSQL<br/>(+ pgvector)
+    participant R2 as Cloudflare R2
+    participant Redis as BullMQ / Redis<br/>(Upstash)
+    participant Worker as Ingestion Worker
+    participant OpenAI as OpenAI API<br/>(Embeddings)
+    participant LLM as LLM Provider<br/>(Anthropic / OpenAI / Google)
+    participant LF as LangFuse
+
+    %% ─────────────────────────────────────────
+    %% 1. AUTHENTICATION
+    %% ─────────────────────────────────────────
+    rect rgb(220, 235, 255)
+        Note over User,Clerk: 1 · AUTHENTICATION
+        User->>FE: Visit app (unauthenticated)
+        FE->>Clerk: Redirect to hosted sign-in UI
+        User->>Clerk: Submit credentials (email / OAuth)
+        Clerk-->>FE: Session JWT (short-lived token)
+        FE->>API: GET /api/v1/users/me  [Bearer JWT]
+        API->>Clerk: clerkMiddleware() — verify & decode JWT
+        Clerk-->>API: { userId: clerk_xxx }
+        API->>DB: UPSERT Users ON CONFLICT clerk_user_id
+        Note right of DB: Syncs email + display_name<br/>from Clerk on every /me call
+        DB-->>API: User row (internal UUID)
+        API-->>FE: { user }
+        FE-->>User: Redirect → /documents
+    end
+
+    %% ─────────────────────────────────────────
+    %% 2. DOCUMENT UPLOAD
+    %% ─────────────────────────────────────────
+    rect rgb(255, 243, 220)
+        Note over User,Redis: 2 · DOCUMENT UPLOAD  (presigned URL pattern)
+        User->>FE: Drag & drop PDF onto UploadZone
+        FE->>API: POST /api/v1/documents/upload-url<br/>{ name, fileName, fileSizeBytes, mimeType }
+        API->>API: Zod: mimeType = application/pdf only<br/>fileSizeBytes ≤ 50 MB
+        API->>DB: INSERT Documents (status = pending)
+        Note right of DB: r2Key = docs/{userId}/{docId}{ext}
+        API->>R2: getSignedUrl(PutObjectCommand, 1 hr)
+        R2-->>API: Presigned PUT URL
+        API-->>FE: { documentId, uploadUrl }
+
+        FE->>R2: PUT <presigned URL>  (PDF binary stream)
+        Note right of R2: Direct browser → R2 upload<br/>API never touches the bytes
+        R2-->>FE: 200 OK
+
+        FE->>API: POST /api/v1/documents/:id/confirm
+        API->>DB: WHERE id = docId AND user_id = userId
+        DB-->>API: Document row (ownership verified)
+        API->>DB: UPDATE Documents SET status = processing
+        API->>Redis: queue.add('ingest', { documentId, userId, r2Key })
+        Redis-->>API: Job enqueued (3 retries, exp. backoff)
+        API-->>FE: { document: { status: "processing" } }
+        FE-->>User: Show processing spinner on document card
+    end
+
+    %% ─────────────────────────────────────────
+    %% 3. INGESTION WORKER  (async, separate process)
+    %% ─────────────────────────────────────────
+    rect rgb(220, 255, 230)
+        Note over Redis,DB: 3 · INGESTION WORKER  (async — Railway worker dyno)
+        Redis->>Worker: Dequeue job { documentId, userId, r2Key }
+        Worker->>R2: downloadObject(r2Key) → Buffer
+        R2-->>Worker: PDF bytes
+
+        Worker->>Worker: pdf-parse(buffer) → { text, numpages }
+
+        alt PDF has no extractable text
+            Worker->>DB: UPDATE Documents SET status = failed
+            Worker->>Redis: Mark job failed → retry up to 3×
+        else Text extracted
+            Worker->>Worker: RecursiveCharacterTextSplitter<br/>chunkSize=2048 chars, overlap=200
+
+            loop Batches of 100 chunks
+                Worker->>OpenAI: embedTexts(batch)<br/>model: text-embedding-3-small
+                OpenAI-->>Worker: number[][] (1536-dim vectors)
+            end
+
+            Worker->>DB: BEGIN TRANSACTION
+            Note right of DB: Bulk INSERT DocumentChunks<br/>(content, embedding::vector, user_id, chunk_index)<br/>in batches of 50 rows
+            Worker->>DB: UPDATE Documents SET status = ready, page_count = N
+            Worker->>DB: COMMIT
+            DB-->>Worker: OK
+            Worker->>Redis: Mark job completed
+            Note over FE,DB: Frontend polls GET /api/v1/documents<br/>and reflects status = ready
+        end
+
+        opt Job exhausts all retries
+            Redis->>Worker: Final failure event
+            Worker->>DB: UPDATE Documents SET status = failed, error_message = ...
+        end
+    end
+
+    %% ─────────────────────────────────────────
+    %% 4. RAG CHAT  (SSE streaming)
+    %% ─────────────────────────────────────────
+    rect rgb(245, 220, 255)
+        Note over User,LF: 4 · RAG CHAT  (Server-Sent Events streaming)
+
+        User->>FE: Open Chat page → New conversation
+        FE->>API: POST /api/v1/chat/sessions  [Bearer JWT]
+        API->>DB: INSERT ChatSessions (title = "New conversation")
+        DB-->>API: { sessionId }
+        API-->>FE: { session }
+
+        User->>FE: Type question → Submit
+        FE->>API: POST /api/v1/chat/sessions/:id/messages<br/>{ content }  Accept: text/event-stream
+        API->>API: Zod: 1 ≤ content.length ≤ 10,000
+        API->>DB: Verify session ownership (session_id + user_id)
+        API->>DB: UPDATE ChatSessions SET title = content[0:60]
+        Note right of DB: Title set from first message only
+        API->>DB: INSERT ChatMessages (role = user)
+        DB-->>API: userMessage row
+
+        Note over API,FE: SSE connection opened
+        API-->>FE: HTTP 200 + headers: text/event-stream
+        API-->>FE: event: user_message  { message }
+        FE-->>User: Render user bubble immediately
+
+        Note over API,LF: RAG pipeline begins (packages/ai)
+        API->>OpenAI: embedQuery(userQuery)<br/>model: text-embedding-3-small
+        OpenAI-->>API: number[] (1536-dim query vector)
+
+        API->>DB: SELECT dc.id, dc.content, d.name, dc.page_number,<br/>1-(embedding <=> ?)  AS similarity<br/>FROM DocumentChunks dc JOIN Documents d<br/>WHERE dc.user_id = ?  AND d.status = 'ready'<br/>AND similarity >= 0.3<br/>ORDER BY embedding <=> ? LIMIT 5
+        Note right of DB: Cosine similarity via pgvector <=> operator<br/>Top-K = 5, threshold = 0.3
+        DB-->>API: RetrievedChunk[] (up to 5 chunks)
+
+        alt No chunks above similarity threshold
+            API-->>FE: event: token  { token: "no docs message" }
+            API-->>FE: event: done
+            FE-->>User: "No relevant documents found" message
+        else Chunks retrieved
+            opt LangFuse keys configured
+                API->>LF: lf.trace({ name: "rag-chat", userId })
+                LF-->>API: traceId
+                API->>LF: trace.generation({ name: "rag-generation", input: messages })
+            end
+
+            Note over API: buildContext(chunks)<br/>Format: [N] Document: "name", Page N\n{content}
+            Note over API: Assemble LangChain messages:<br/>SystemMessage: HomeAtlas persona + citation rules<br/>HumanMessage: context block + Question: {userQuery}
+
+            API->>LLM: llm.stream([SystemMessage, HumanMessage])
+            Note right of LLM: Provider from LLM_PROVIDER env var<br/>maxTokens = 2048
+
+            loop Token stream (until end-of-stream)
+                LLM-->>API: StreamChunk (string token)
+                API-->>FE: event: token  { token }
+                FE-->>User: Append token to assistant bubble
+            end
+
+            API->>API: parseCitations(fullText, chunks)<br/>Regex [N] → { chunkId, documentId, documentName, page }
+            API->>DB: INSERT ChatMessages<br/>(role = assistant, content, citations JSON,<br/>langfuse_trace_id)
+            DB-->>API: assistantMessage row
+
+            opt LangFuse configured
+                API->>LF: generation.end({ output: fullText })
+            end
+
+            API-->>FE: event: done  { message: assistantMessage }
+            FE-->>User: Render complete response + CitationChip components
+        end
+    end
+
+    %% ─────────────────────────────────────────
+    %% 5. DOCUMENT DOWNLOAD
+    %% ─────────────────────────────────────────
+    rect rgb(255, 255, 210)
+        Note over User,R2: 5 · DOCUMENT DOWNLOAD
+        User->>FE: Click download on document card
+        FE->>API: GET /api/v1/documents/:id/download-url  [Bearer JWT]
+        API->>DB: WHERE id = docId AND user_id = userId
+        DB-->>API: Document row (+ r2_key)
+        API->>R2: getSignedUrl(GetObjectCommand, 900s)
+        R2-->>API: Presigned GET URL (15 min expiry)
+        API-->>FE: { url }
+        FE->>R2: GET <presigned URL>
+        R2-->>FE: PDF stream
+        FE-->>User: Browser downloads / opens PDF
+    end
+
+    %% ─────────────────────────────────────────
+    %% 6. FEEDBACK
+    %% ─────────────────────────────────────────
+    rect rgb(235, 245, 235)
+        Note over User,LF: 6 · RESPONSE FEEDBACK  (thumbs up / down)
+        User->>FE: Click 👍 or 👎 on assistant message
+        FE->>API: POST /api/v1/chat/messages/:id/feedback<br/>{ value: 1 | -1 }
+        API->>DB: WHERE id = messageId AND user_id = userId AND role = assistant
+        DB-->>API: Message row (with langfuse_trace_id)
+        API->>DB: UPDATE ChatMessages SET feedback = value
+        opt LangFuse configured AND traceId present
+            API->>LF: lf.score({ traceId, name: "user-feedback", value })
+            Note right of LF: Non-fatal — failure silently ignored
+        end
+        API-->>FE: { ok: true }
+        FE-->>User: Feedback icon fills / confirms
+    end
