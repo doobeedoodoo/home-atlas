@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
@@ -7,24 +7,38 @@ import Paper from '@mui/material/Paper';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import { useAuth } from '@clerk/react';
+import { useQueryClient } from '@tanstack/react-query';
 import { SessionSidebar } from './SessionSidebar';
 import { MessageList } from './MessageList';
-import { useMessages } from '../../hooks/useChat';
-import { sendMessage } from '../../api/chat';
+import { useMessages, useCreateSession } from '../../hooks/useChat';
+import { streamMessage, submitFeedback } from '../../api/chat';
 import type { ChatMessage } from '../../types';
+
+const STREAMING_ID = '__streaming__';
 
 export function ChatPage() {
   const muiTheme = useTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
+  const { getToken } = useAuth();
+  const queryClient = useQueryClient();
+  const createSession = useCreateSession();
 
-  const [selectedSession, setSelectedSession] = useState('1');
+  const [selectedSession, setSelectedSession] = useState('');
   const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
-  const [isThinking, setIsThinking] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const abortRef = useRef(false);
+
+  async function handleFeedback(messageId: string, value: 1 | -1) {
+    const token = await getToken();
+    if (!token) return;
+    await submitFeedback(messageId, value, token);
+  }
 
   const { data: sessionMessages } = useMessages(selectedSession);
 
-  // Sync session messages into local state when session changes
+  // Sync server messages into local state when session changes
   useEffect(() => {
     setLocalMessages(sessionMessages ?? []);
   }, [sessionMessages, selectedSession]);
@@ -34,26 +48,74 @@ export function ChatPage() {
     setLocalMessages([]);
   }
 
+  function handleSelectSession(id: string) {
+    setSelectedSession(id);
+    setLocalMessages([]);
+  }
+
   async function handleSend() {
     const content = input.trim();
-    if (!content || isThinking) return;
+    if (!content || isStreaming) return;
 
     setInput('');
-
-    const userMsg: ChatMessage = {
-      id: `u-${Date.now()}`,
-      role: 'user',
-      content,
-      createdAt: new Date().toISOString(),
-    };
-    setLocalMessages((prev) => [...prev, userMsg]);
-    setIsThinking(true);
+    setIsStreaming(true);
+    abortRef.current = false;
 
     try {
-      const reply = await sendMessage(selectedSession, content);
-      setLocalMessages((prev) => [...prev, reply]);
+      const token = await getToken();
+      if (!token) throw new Error('Not authenticated');
+
+      // Create a new session if none is selected
+      let sessionId = selectedSession;
+      if (!sessionId) {
+        const session = await createSession.mutateAsync();
+        sessionId = session.id;
+        setSelectedSession(sessionId);
+      }
+
+      await streamMessage(sessionId, content, token, (event) => {
+        if (abortRef.current) return;
+
+        if (event.type === 'user_message' && event.message) {
+          setLocalMessages((prev) => [...prev, event.message!]);
+          // Add a placeholder for the streaming assistant message
+          setLocalMessages((prev) => [
+            ...prev,
+            { id: STREAMING_ID, role: 'assistant', content: '', createdAt: new Date().toISOString() },
+          ]);
+        } else if (event.type === 'token' && event.token) {
+          setLocalMessages((prev) =>
+            prev.map((m) =>
+              m.id === STREAMING_ID ? { ...m, content: m.content + event.token! } : m,
+            ),
+          );
+        } else if (event.type === 'done' && event.message) {
+          setLocalMessages((prev) =>
+            prev.map((m) => (m.id === STREAMING_ID ? event.message! : m)),
+          );
+          void queryClient.invalidateQueries({ queryKey: ['sessions'] });
+          void queryClient.invalidateQueries({ queryKey: ['messages', sessionId] });
+        } else if (event.type === 'error') {
+          setLocalMessages((prev) =>
+            prev.map((m) =>
+              m.id === STREAMING_ID
+                ? { ...m, content: event.error ?? 'An error occurred. Please try again.' }
+                : m,
+            ),
+          );
+        }
+      });
+    } catch (err) {
+      setLocalMessages((prev) =>
+        prev.filter((m) => m.id !== STREAMING_ID).concat({
+          id: `err-${Date.now()}`,
+          role: 'assistant',
+          content: err instanceof Error ? err.message : 'An error occurred. Please try again.',
+          createdAt: new Date().toISOString(),
+        }),
+      );
     } finally {
-      setIsThinking(false);
+      setIsStreaming(false);
     }
   }
 
@@ -64,9 +126,12 @@ export function ChatPage() {
     }
   }
 
+  // isThinking = streaming but no assistant token yet
+  const isThinking = isStreaming && !localMessages.some((m) => m.id === STREAMING_ID && m.content);
+
   const chatArea = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      <MessageList messages={localMessages} isThinking={isThinking} />
+      <MessageList messages={localMessages} isThinking={isThinking} onFeedback={handleFeedback} />
 
       {/* Input */}
       <Box sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
@@ -87,7 +152,7 @@ export function ChatPage() {
           />
           <IconButton
             onClick={() => void handleSend()}
-            disabled={!input.trim() || isThinking}
+            disabled={!input.trim() || isStreaming}
             size="small"
             sx={{
               bgcolor: input.trim() ? 'primary.main' : 'grey.200',
@@ -117,7 +182,7 @@ export function ChatPage() {
     <Box sx={{ height: '100vh', display: 'flex', overflow: 'hidden' }}>
       <SessionSidebar
         selectedId={selectedSession}
-        onSelect={(id) => setSelectedSession(id)}
+        onSelect={handleSelectSession}
         onNew={handleNewSession}
       />
       <Box sx={{ flexGrow: 1, overflow: 'hidden' }}>

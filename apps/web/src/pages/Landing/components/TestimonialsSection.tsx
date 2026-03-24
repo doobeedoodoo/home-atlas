@@ -28,9 +28,9 @@ export function TestimonialsSection() {
       <Box sx={{ maxWidth: 1100, mx: 'auto', px: { xs: 3, md: 4 } }}>
         <Stack spacing={2} alignItems="center" textAlign="center" mb={8}>
           <Typography variant="h4" fontWeight={800} letterSpacing="-0.02em">
-          Loved by users
+            Loved by users
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography color="text.secondary">
             See what people are saying about HomeAtlas.
           </Typography>
         </Stack>

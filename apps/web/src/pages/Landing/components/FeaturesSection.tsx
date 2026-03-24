@@ -70,7 +70,7 @@ export function FeaturesSection() {
           <Typography variant="h4" fontWeight={800} letterSpacing="-0.02em">
             Everything your home knows
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 480, lineHeight: 1.75 }}>
+          <Typography color="text.secondary" sx={{ maxWidth: 480, lineHeight: 1.75 }}>
             One place for every document, every answer, every detail about your property.
           </Typography>
         </Stack>

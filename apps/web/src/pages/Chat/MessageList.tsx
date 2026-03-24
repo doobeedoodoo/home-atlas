@@ -1,19 +1,87 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import Avatar from '@mui/material/Avatar';
 import CircularProgress from '@mui/material/CircularProgress';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
+import ThumbDownOutlinedIcon from '@mui/icons-material/ThumbDownOutlined';
+import ThumbUpIcon from '@mui/icons-material/ThumbUp';
+import ThumbDownIcon from '@mui/icons-material/ThumbDown';
+import ReactMarkdown from 'react-markdown';
 import { CitationChip } from '../../components/CitationChip/CitationChip';
 import type { ChatMessage } from '../../types';
+
+const FEEDBACK_ENABLED = import.meta.env['VITE_ENABLE_FEEDBACK'] === 'true';
 
 interface Props {
   messages: ChatMessage[];
   isThinking: boolean;
+  onFeedback?: (messageId: string, value: 1 | -1) => Promise<void>;
 }
 
-export function MessageList({ messages, isThinking }: Props) {
+interface FeedbackButtonsProps {
+  messageId: string;
+  onFeedback: (messageId: string, value: 1 | -1) => Promise<void>;
+}
+
+function FeedbackButtons({ messageId, onFeedback }: FeedbackButtonsProps) {
+  const [submitted, setSubmitted] = useState<1 | -1 | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleClick(value: 1 | -1) {
+    if (loading || submitted !== null) return;
+    setLoading(true);
+    try {
+      await onFeedback(messageId, value);
+      setSubmitted(value);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Stack direction="row" spacing={0.25} sx={{ mt: 0.5 }}>
+      <Tooltip title="Good response">
+        <span>
+          <IconButton
+            size="small"
+            disabled={loading || submitted !== null}
+            onClick={() => void handleClick(1)}
+            sx={{ color: submitted === 1 ? 'primary.main' : 'text.disabled', p: 0.5 }}
+          >
+            {submitted === 1 ? (
+              <ThumbUpIcon sx={{ fontSize: 14 }} />
+            ) : (
+              <ThumbUpOutlinedIcon sx={{ fontSize: 14 }} />
+            )}
+          </IconButton>
+        </span>
+      </Tooltip>
+      <Tooltip title="Bad response">
+        <span>
+          <IconButton
+            size="small"
+            disabled={loading || submitted !== null}
+            onClick={() => void handleClick(-1)}
+            sx={{ color: submitted === -1 ? 'error.main' : 'text.disabled', p: 0.5 }}
+          >
+            {submitted === -1 ? (
+              <ThumbDownIcon sx={{ fontSize: 14 }} />
+            ) : (
+              <ThumbDownOutlinedIcon sx={{ fontSize: 14 }} />
+            )}
+          </IconButton>
+        </span>
+      </Tooltip>
+    </Stack>
+  );
+}
+
+export function MessageList({ messages, isThinking, onFeedback }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -55,17 +123,6 @@ export function MessageList({ messages, isThinking }: Props) {
             spacing={1.5}
             alignItems="flex-start"
           >
-            <Avatar
-              sx={{
-                width: 28,
-                height: 28,
-                bgcolor: msg.role === 'user' ? 'grey.300' : 'primary.main',
-                fontSize: '0.75rem',
-                flexShrink: 0,
-              }}
-            >
-              {msg.role === 'user' ? 'U' : 'AI'}
-            </Avatar>
             <Box sx={{ maxWidth: '80%' }}>
               <Box
                 sx={{
@@ -76,16 +133,39 @@ export function MessageList({ messages, isThinking }: Props) {
                   borderRadius: 2,
                   px: 2,
                   py: 1.5,
-                  whiteSpace: 'pre-wrap',
                 }}
               >
-                <Typography variant="body2">{msg.content}</Typography>
+                {msg.role === 'assistant' ? (
+                  <Box
+                    sx={{
+                      fontSize: '0.875rem',
+                      lineHeight: 1.7,
+                      '& p': { m: 0, mb: 1, '&:last-child': { mb: 0 } },
+                      '& strong': { fontWeight: 700 },
+                      '& em': { fontStyle: 'italic' },
+                      '& ul, & ol': { pl: 2.5, my: 0.5 },
+                      '& li': { mb: 0.25 },
+                      '& code': { fontFamily: 'monospace', fontSize: '0.8125rem', bgcolor: 'grey.100', px: 0.5, borderRadius: 0.5 },
+                    }}
+                  >
+                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  </Box>
+                ) : (
+                  <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{msg.content}</Typography>
+                )}
               </Box>
-              {msg.citations && msg.citations.length > 0 && (
-                <Stack direction="row" flexWrap="wrap" spacing={0.75} sx={{ mt: 1 }}>
-                  {msg.citations.map((c) => (
-                    <CitationChip key={c.id} citation={c} />
-                  ))}
+              {msg.role === 'assistant' && ((msg.citations?.length ?? 0) > 0 || (FEEDBACK_ENABLED && onFeedback && msg.id !== '__streaming__')) && (
+                <Stack direction="row" alignItems="center" flexWrap="wrap" spacing={0.75} sx={{ mt: 1, width: '100%', alignItems: 'flex-end' }}>
+                  {msg.citations
+                    ?.filter((c, i, arr) => arr.findIndex((x) => x.id === c.id && x.page === c.page) === i)
+                    .map((c) => (
+                      <CitationChip key={`${c.id}-${c.page ?? 'no-page'}`} citation={c} />
+                    ))}
+                  {FEEDBACK_ENABLED && onFeedback && msg.id !== '__streaming__' && (
+                    <Box sx={{ ml: 'auto', flexShrink: 0 }}>
+                      <FeedbackButtons messageId={msg.id} onFeedback={onFeedback} />
+                    </Box>
+                  )}
                 </Stack>
               )}
             </Box>

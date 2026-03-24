@@ -37,7 +37,7 @@ export function HeroSection() {
               >
                 Your home's AI knowledge hub
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.75 }}>
+              <Typography color="text.secondary" sx={{ lineHeight: 1.75 }}>
                 HomeAtlas keeps your documents in one place — then lets you ask questions about any of it.
               </Typography>
             </Stack>

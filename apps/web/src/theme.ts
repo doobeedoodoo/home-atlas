@@ -23,11 +23,6 @@ export const theme = createTheme({
   },
   typography: {
     fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-    h5: { fontWeight: 600, letterSpacing: '-0.01em' },
-    h6: { fontWeight: 600, letterSpacing: '-0.01em' },
-    subtitle1: { fontWeight: 500 },
-    subtitle2: { fontWeight: 600 },
-    body2: { fontSize: '1.25rem' },
   },
   shape: {
     borderRadius: 8,

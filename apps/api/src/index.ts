@@ -9,6 +9,7 @@ import { db } from '../../../packages/db/src/knex';
 import { AppError } from './errors/AppError';
 import usersRouter from './routes/users';
 import documentsRouter from './routes/documents';
+import chatRouter from './routes/chat';
 
 const logger = pino();
 const app = express();
@@ -38,6 +39,7 @@ app.get('/health/ready', async (_req, res) => {
 // API routes
 app.use('/api/v1/users', usersRouter);
 app.use('/api/v1/documents', documentsRouter);
+app.use('/api/v1/chat', chatRouter);
 
 // Global error handler
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {

@@ -27,7 +27,7 @@ export async function embedTexts(texts: string[]): Promise<number[][]> {
     input: texts,
     dimensions: EMBEDDING_DIMENSIONS,
   });
-  
+
   // API returns results in the same order as input
   return response.data
     .sort((a, b) => a.index - b.index)
