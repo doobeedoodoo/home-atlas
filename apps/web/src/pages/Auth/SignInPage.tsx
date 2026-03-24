@@ -1,6 +1,7 @@
 import { SignIn } from '@clerk/react';
 import Box from '@mui/material/Box';
 import { PublicHeader } from '../../components/PublicHeader/PublicHeader';
+import { clerkAppearance } from './clerkAppearance';
 
 export function SignInPage() {
   return (
@@ -16,7 +17,7 @@ export function SignInPage() {
           p: 2,
         }}
       >
-        <SignIn routing="path" path="/login" signUpUrl="/signup" appearance={{ layout: { logoPlacement: 'none' } }} />
+        <SignIn routing="path" path="/login" signUpUrl="/signup" appearance={clerkAppearance} />
       </Box>
     </Box>
   );
