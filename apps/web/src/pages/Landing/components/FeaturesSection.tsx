@@ -3,7 +3,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import ArchiveOutlinedIcon from '@mui/icons-material/ArchiveOutlined';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
-import CottageOutlinedIcon from '@mui/icons-material/CottageOutlined';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import type { SvgIconComponent } from '@mui/icons-material';
 
 interface Feature {
@@ -15,21 +15,21 @@ interface Feature {
 const FEATURES: Feature[] = [
   {
     Icon: ArchiveOutlinedIcon,
-    title: 'Capture everything',
+    title: 'All your paperwork, in one place',
     description:
-      'Upload manuals, warranties, rental contracts, and renovation records — all your home\'s paperwork, in one place.',
+      'Upload manuals, warranties, rental contracts, and renovation records — your home documents, organised and ready to search.',
   },
   {
     Icon: ChatBubbleOutlineIcon,
     title: 'Powered by AI',
     description:
-      'Ask anything and get instant, accurate answers.',
+      'Ask anything about your documents and get instant, accurate answers.',
   },
   {
-    Icon: CottageOutlinedIcon,
-    title: 'Know your home',
+    Icon: LockOutlinedIcon,
+    title: 'Yours alone',
     description:
-      'Build a living record of your property that grows with you — always searchable, always at hand.',
+      'Your documents are private and secure — encrypted in storage and accessible only to you.',
   },
 ];
 
@@ -68,7 +68,7 @@ export function FeaturesSection() {
       <Box sx={{ maxWidth: 1100, mx: 'auto', px: { xs: 3, md: 4 } }}>
         <Stack spacing={2} alignItems="center" textAlign="center" mb={8}>
           <Typography variant="h4" fontWeight={800} letterSpacing="-0.02em">
-            Everything your home knows
+            Know your home
           </Typography>
           <Typography color="text.secondary" sx={{ maxWidth: 480, lineHeight: 1.75 }}>
             One place for every document, every answer, every detail about your property.
