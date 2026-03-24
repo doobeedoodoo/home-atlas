@@ -5,7 +5,6 @@ import { db } from '../../../../packages/db/src/knex';
 import { asyncHandler } from '../utils/asyncHandler';
 import { AppError } from '../errors/AppError';
 import { streamRagResponse } from '../../../../packages/ai/src/index';
-import type { Citation } from '../../../../packages/ai/src/index';
 
 const router = Router();
 
@@ -134,7 +133,7 @@ router.post(
     res.flushHeaders();
 
     function sendEvent(type: string, data: unknown) {
-      res.write(`data: ${JSON.stringify({ type, ...( typeof data === 'object' ? data : { value: data }) })}\n\n`);
+      res.write(`data: ${JSON.stringify({ type, ...(typeof data === 'object' ? data : { value: data }) })}\n\n`);
     }
 
     // Send user message first so the client can add it immediately
@@ -161,7 +160,7 @@ router.post(
         sendEvent('done', { message: assistantMessage });
         res.end();
       },
-      onError(err) {
+      onError() {
         sendEvent('error', { error: 'Failed to generate response' });
         res.end();
       },
