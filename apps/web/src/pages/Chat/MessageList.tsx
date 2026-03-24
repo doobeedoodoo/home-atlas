@@ -148,7 +148,7 @@ export function MessageList({ messages, isThinking, onFeedback }: Props) {
                       '& code': { fontFamily: 'monospace', fontSize: '0.8125rem', bgcolor: 'grey.100', px: 0.5, borderRadius: 0.5 },
                     }}
                   >
-                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    <ReactMarkdown>{msg.content.replace(/\[\d+\]/g, '').trim()}</ReactMarkdown>
                   </Box>
                 ) : (
                   <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{msg.content}</Typography>
@@ -157,9 +157,9 @@ export function MessageList({ messages, isThinking, onFeedback }: Props) {
               {msg.role === 'assistant' && ((msg.citations?.length ?? 0) > 0 || (FEEDBACK_ENABLED && onFeedback && msg.id !== '__streaming__')) && (
                 <Stack direction="row" alignItems="center" flexWrap="wrap" spacing={0.75} sx={{ mt: 1, width: '100%', alignItems: 'flex-end' }}>
                   {msg.citations
-                    ?.filter((c, i, arr) => arr.findIndex((x) => x.id === c.id && x.page === c.page) === i)
+                    ?.filter((c, i, arr) => arr.findIndex((x) => x.documentId === c.documentId && x.page === c.page) === i)
                     .map((c) => (
-                      <CitationChip key={`${c.id}-${c.page ?? 'no-page'}`} citation={c} />
+                      <CitationChip key={`${c.chunkId}-${c.page ?? 'no-page'}`} citation={c} />
                     ))}
                   {FEEDBACK_ENABLED && onFeedback && msg.id !== '__streaming__' && (
                     <Box sx={{ ml: 'auto', flexShrink: 0 }}>

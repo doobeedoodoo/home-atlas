@@ -13,9 +13,10 @@ export interface Document {
 }
 
 export interface Citation {
-  id: string;
+  chunkId: string;
+  documentId: string;
   documentName: string;
-  page?: number;
+  page: number | null;
 }
 
 export interface ChatMessage {
