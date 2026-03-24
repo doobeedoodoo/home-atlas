@@ -27,8 +27,8 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<LandingRoute />} />
-      <Route path="/login/*" element={<SignInPage />} />
-      <Route path="/signup/*" element={<SignUpPage />} />
+      <Route path="/login" element={<SignInPage />} />
+      <Route path="/signup" element={<SignUpPage />} />
       <Route
         element={
           <RequireAuth>

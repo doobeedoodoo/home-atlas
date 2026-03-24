@@ -13,9 +13,11 @@ interface Props {
   transparent?: boolean;
   /** Show Get started / Sign in buttons. Default: true. */
   showAuthButtons?: boolean;
+  /** Always show the brand name, even on mobile. Default: false. */
+  showBrandName?: boolean;
 }
 
-export function PublicHeader({ transparent = false, showAuthButtons = true }: Props) {
+export function PublicHeader({ transparent = false, showAuthButtons = true, showBrandName = false }: Props) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const triggered = useScrollTrigger({ disableHysteresis: true, threshold: 16 });
@@ -43,7 +45,7 @@ export function PublicHeader({ transparent = false, showAuthButtons = true }: Pr
         >
           <img src="/images/logo.png" alt="HomeAtlas logo" style={{ height: isMobile ? 32 : 48, width: 'auto' }} />
           <Typography variant="h5" fontWeight={700} color="text.primary"
-            sx={{ display: { xs: 'none', sm: 'block' }, fontSize: { sm: '1.1rem', md: '1.5rem' } }}
+            sx={{ display: { xs: showBrandName ? 'block' : 'none', sm: 'block' }, fontSize: { xs: '1rem', sm: '1.1rem', md: '1.5rem' } }}
           >
             HomeAtlas
           </Typography>

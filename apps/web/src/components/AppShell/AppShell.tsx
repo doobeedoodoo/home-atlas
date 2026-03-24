@@ -24,7 +24,7 @@ export function AppShell() {
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
       {isMobile ? (
         <>
-          <AppBar position="fixed" sx={{ bgcolor: '#1C1C1C', boxShadow: 'none' }}>
+          <AppBar position="fixed" sx={{ bgcolor: '#00674F', boxShadow: 'none' }}>
             <Toolbar variant="dense">
               <IconButton
                 color="inherit"
@@ -34,9 +34,12 @@ export function AppShell() {
               >
                 <MenuIcon />
               </IconButton>
-              <Typography variant="h6" sx={{ fontWeight: 700, letterSpacing: '-0.02em' }}>
-                HomeAtlas
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <img src="/images/logo.png" alt="HomeAtlas logo" style={{ height: 28, width: 'auto', filter: 'brightness(0) invert(1)' }} />
+                <Typography variant="h6" sx={{ fontWeight: 700, letterSpacing: '-0.02em' }}>
+                  HomeAtlas
+                </Typography>
+              </Box>
             </Toolbar>
           </AppBar>
           <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)}>

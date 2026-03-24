@@ -52,7 +52,7 @@ export function Sidebar({ onClose }: Props) {
       sx={{
         width: SIDEBAR_WIDTH,
         height: '100vh',
-        bgcolor: '#1C1C1C',
+        bgcolor: '#00674F',
         display: 'flex',
         flexDirection: 'column',
         flexShrink: 0,
@@ -60,7 +60,8 @@ export function Sidebar({ onClose }: Props) {
       }}
     >
       {/* Brand */}
-      <Box sx={{ px: 2.5, py: 2.5 }}>
+      <Box sx={{ px: 2.5, py: 2.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+        <img src="/images/logo.png" alt="HomeAtlas logo" style={{ height: 32, width: 'auto', filter: 'brightness(0) invert(1)' }} />
         <Typography
           variant="h6"
           sx={{ color: '#ffffff', fontWeight: 700, letterSpacing: '-0.02em' }}
@@ -117,7 +118,7 @@ export function Sidebar({ onClose }: Props) {
           }}
         >
           <ListItemIcon sx={{ minWidth: 36 }}>
-            <Avatar sx={{ width: 28, height: 28, bgcolor: '#00897B', fontSize: '0.75rem' }}>
+            <Avatar sx={{ width: 28, height: 28, bgcolor: '#ffffff', fontSize: '0.75rem', color: '#000000' }}>
               {avatarLetter}
             </Avatar>
           </ListItemIcon>
@@ -126,7 +127,7 @@ export function Sidebar({ onClose }: Props) {
             primaryTypographyProps={{
               fontSize: '0.8125rem',
               fontWeight: 500,
-              color: 'rgba(255,255,255,0.75)',
+              color: '#ffffff',
               noWrap: true,
             }}
           />

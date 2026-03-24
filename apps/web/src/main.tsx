@@ -18,7 +18,7 @@ const queryClient = new QueryClient({
 });
 
 createRoot(document.getElementById('root')!).render(
-  <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/login" signInUrl="/login" signUpUrl="/signup">
+  <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/login" signInUrl="/login" signUpUrl="/signup" appearance={{ theme: 'simple' }}>
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider theme={theme}>

@@ -6,7 +6,7 @@ import { clerkAppearance } from './clerkAppearance';
 export function SignUpPage() {
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      <PublicHeader showAuthButtons={false} />
+      <PublicHeader showAuthButtons={false} showBrandName />
       <Box
         sx={{
           minHeight: '100vh',
@@ -17,14 +17,7 @@ export function SignUpPage() {
           p: 2,
         }}
       >
-        <SignUp
-          routing="path"
-          path="/signup"
-          signInUrl="/login"
-          appearance={{
-            ...clerkAppearance,
-          }}
-        />
+        <SignUp routing="hash" signInUrl="/login" appearance={{ ...clerkAppearance }} />
       </Box>
     </Box>
   );
