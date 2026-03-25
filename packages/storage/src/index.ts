@@ -38,16 +38,31 @@ export async function generateDownloadUrl(key: string): Promise<string> {
   );
 }
 
-/** Downloads an object from R2 and returns its contents as a Buffer. */
-export async function downloadObject(key: string): Promise<Buffer> {
-  const response = await getClient().send(new GetObjectCommand({ Bucket: bucket(), Key: key }));
-  const stream = response.Body as Readable;
+async function streamToBuffer(stream: Readable): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
     stream.on('data', (chunk: Buffer) => chunks.push(chunk));
     stream.on('end', () => resolve(Buffer.concat(chunks)));
     stream.on('error', reject);
   });
+}
+
+/** Downloads an object from R2 and returns its contents as a Buffer. */
+export async function downloadObject(key: string): Promise<Buffer> {
+  const response = await getClient().send(new GetObjectCommand({ Bucket: bucket(), Key: key }));
+  return streamToBuffer(response.Body as Readable);
+}
+
+/**
+ * Downloads only the first `byteCount` bytes of an R2 object using an HTTP
+ * Range request. Use this for header/magic-byte checks — never pull the full
+ * file when only a small prefix is needed.
+ */
+export async function downloadPartialObject(key: string, byteCount: number): Promise<Buffer> {
+  const response = await getClient().send(
+    new GetObjectCommand({ Bucket: bucket(), Key: key, Range: `bytes=0-${byteCount - 1}` }),
+  );
+  return streamToBuffer(response.Body as Readable);
 }
 
 /** Deletes an object from R2. Does not throw if the object is already gone. */

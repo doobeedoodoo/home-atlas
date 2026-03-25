@@ -10,6 +10,7 @@ import {
   generateUploadUrl,
   generateDownloadUrl,
   deleteObject,
+  downloadPartialObject,
 } from '../../../../packages/storage/src';
 import { ingestionQueue } from '../queue';
 
@@ -85,6 +86,24 @@ router.post(
     const doc = await getOwnedDoc(id, user.id);
 
     if (!doc.r2_key) throw new AppError(400, 'Document has no associated file');
+
+    // Verify the uploaded file starts with the PDF magic bytes (%PDF).
+    // This runs before the job is queued so a zip bomb or malicious binary
+    // never reaches the worker process.
+    const PDF_MAGIC = Buffer.from([0x25, 0x50, 0x44, 0x46]); // %PDF
+    let header: Buffer;
+    try {
+      header = await downloadPartialObject(doc.r2_key as string, 4);
+    } catch {
+      throw new AppError(400, 'File not found — please upload the file before confirming');
+    }
+    if (header.length < 4 || !header.subarray(0, 4).equals(PDF_MAGIC)) {
+      await deleteObject(doc.r2_key as string).catch(() => undefined);
+      await db('Documents')
+        .where({ id })
+        .update({ status: 'failed', error_message: 'Uploaded file is not a valid PDF', updated_at: new Date() });
+      throw new AppError(400, 'Uploaded file is not a valid PDF');
+    }
 
     const [updated] = await db('Documents')
       .where({ id })
