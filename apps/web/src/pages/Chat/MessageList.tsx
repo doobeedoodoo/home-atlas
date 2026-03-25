@@ -116,7 +116,7 @@ export function MessageList({ messages, isThinking, onFeedback }: Props) {
   return (
     <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 3 }}>
       <Stack spacing={3} sx={{ maxWidth: 720, mx: 'auto' }}>
-        {messages.map((msg) => (
+        {messages.filter((msg) => msg.role === 'user' || msg.content).map((msg) => (
           <Stack
             key={msg.id}
             direction={msg.role === 'user' ? 'row-reverse' : 'row'}
