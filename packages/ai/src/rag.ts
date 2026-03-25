@@ -115,7 +115,7 @@ interface LangfuseHandle {
   generation: any;
 }
 
-const isDev = process.env['NODE_ENV'] !== 'production';
+const isDev = process.env['LANGFUSE_FULL_TRACE'] === 'true';
 
 async function initLangfuse(userId: string, userQuery: string): Promise<LangfuseHandle | undefined> {
   if (
