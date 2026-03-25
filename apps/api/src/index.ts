@@ -10,6 +10,7 @@ import { AppError } from './errors/AppError';
 import usersRouter from './routes/users';
 import documentsRouter from './routes/documents';
 import chatRouter from './routes/chat';
+import { healthLimiter, apiLimiter, chatLimiter } from './middleware/rateLimiter';
 
 const logger = pino();
 const app = express();
@@ -21,12 +22,11 @@ app.use(pinoHttp());
 app.use(express.json());
 app.use(clerkMiddleware());
 
-// Health checks (unauthenticated)
-app.get('/health/live', (_req, res) => {
+app.get('/health/live', healthLimiter, (_req, res) => {
   res.json({ status: 'ok', uptime: process.uptime() });
 });
 
-app.get('/health/ready', async (_req, res) => {
+app.get('/health/ready', healthLimiter, async (_req, res) => {
   try {
     await db.raw('SELECT 1');
     res.json({ status: 'ok', db: 'connected' });
@@ -36,7 +36,8 @@ app.get('/health/ready', async (_req, res) => {
   }
 });
 
-// API routes
+app.use('/api/v1', apiLimiter);
+app.use('/api/v1/chat/sessions/:id/messages', chatLimiter);
 app.use('/api/v1/users', usersRouter);
 app.use('/api/v1/documents', documentsRouter);
 app.use('/api/v1/chat', chatRouter);
