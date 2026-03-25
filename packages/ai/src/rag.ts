@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import type { Knex } from 'knex';
 import { createLlm } from './llm';
@@ -114,7 +115,7 @@ interface LangfuseHandle {
   generation: any;
 }
 
-async function initLangfuse(userId: string, userQuery: string): Promise<LangfuseHandle | undefined> {
+async function initLangfuse(userId: string, queryLength: number): Promise<LangfuseHandle | undefined> {
   if (
     !process.env['LANGFUSE_PUBLIC_KEY'] ||
     !process.env['LANGFUSE_SECRET_KEY'] ||
@@ -129,8 +130,11 @@ async function initLangfuse(userId: string, userQuery: string): Promise<Langfuse
       secretKey: process.env['LANGFUSE_SECRET_KEY'],
       baseUrl: process.env['LANGFUSE_HOST'],
     });
+    // Hash the internal user ID so LangFuse can correlate traces per user
+    // without storing a value that can be joined back to the users table.
+    const hashedUserId = createHash('sha256').update(userId).digest('hex').slice(0, 16);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const trace = lf.trace({ name: 'rag-chat', userId, input: userQuery }) as any;
+    const trace = lf.trace({ name: 'rag-chat', userId: hashedUserId, metadata: { queryLength } }) as any;
     return { traceId: trace.id as string, generation: trace };
   } catch {
     return undefined;
@@ -143,7 +147,7 @@ export async function streamRagResponse(
   userQuery: string,
   callbacks: RagStreamCallbacks,
 ): Promise<void> {
-  const lf = await initLangfuse(userId, userQuery);
+  const lf = await initLangfuse(userId, userQuery.length);
 
   try {
     // 1. Embed the query
@@ -171,8 +175,8 @@ export async function streamRagResponse(
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const generation = lf?.generation.generation({
       name: 'rag-generation',
-      input: messages.map((m) => ({ role: m._getType(), content: m.content })),
       model: process.env['LLM_MODEL'],
+      metadata: { chunkCount: chunks.length },
     });
 
     let fullText = '';
@@ -185,11 +189,12 @@ export async function streamRagResponse(
       }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    generation?.end({ output: fullText });
-
     // 5. Parse citations and call onDone
     const citations = parseCitations(fullText, chunks);
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    generation?.end({ metadata: { responseLength: fullText.length, citationCount: citations.length } });
+
     callbacks.onDone(fullText, citations, lf?.traceId);
   } catch (err) {
     callbacks.onError(err instanceof Error ? err : new Error(String(err)));
