@@ -115,7 +115,9 @@ interface LangfuseHandle {
   generation: any;
 }
 
-async function initLangfuse(userId: string, queryLength: number): Promise<LangfuseHandle | undefined> {
+const isDev = process.env['NODE_ENV'] !== 'production';
+
+async function initLangfuse(userId: string, userQuery: string): Promise<LangfuseHandle | undefined> {
   if (
     !process.env['LANGFUSE_PUBLIC_KEY'] ||
     !process.env['LANGFUSE_SECRET_KEY'] ||
@@ -130,11 +132,16 @@ async function initLangfuse(userId: string, queryLength: number): Promise<Langfu
       secretKey: process.env['LANGFUSE_SECRET_KEY'],
       baseUrl: process.env['LANGFUSE_HOST'],
     });
-    // Hash the internal user ID so LangFuse can correlate traces per user
-    // without storing a value that can be joined back to the users table.
-    const hashedUserId = createHash('sha256').update(userId).digest('hex').slice(0, 16);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const trace = lf.trace({ name: 'rag-chat', userId: hashedUserId, metadata: { queryLength } }) as any;
+    const trace = lf.trace(
+      isDev
+        ? { name: 'rag-chat', userId, input: userQuery }
+        : {
+            name: 'rag-chat',
+            userId: createHash('sha256').update(userId).digest('hex').slice(0, 16),
+            metadata: { queryLength: userQuery.length },
+          },
+    ) as any;
     return { traceId: trace.id as string, generation: trace };
   } catch {
     return undefined;
@@ -147,7 +154,7 @@ export async function streamRagResponse(
   userQuery: string,
   callbacks: RagStreamCallbacks,
 ): Promise<void> {
-  const lf = await initLangfuse(userId, userQuery.length);
+  const lf = await initLangfuse(userId, userQuery);
 
   try {
     // 1. Embed the query
@@ -173,11 +180,11 @@ export async function streamRagResponse(
     const messages = [new SystemMessage(SYSTEM_PROMPT), new HumanMessage(userPrompt)];
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    const generation = lf?.generation.generation({
-      name: 'rag-generation',
-      model: process.env['LLM_MODEL'],
-      metadata: { chunkCount: chunks.length },
-    });
+    const generation = lf?.generation.generation(
+      isDev
+        ? { name: 'rag-generation', model: process.env['LLM_MODEL'], input: messages.map((m) => ({ role: m._getType(), content: m.content })) }
+        : { name: 'rag-generation', model: process.env['LLM_MODEL'], metadata: { chunkCount: chunks.length } },
+    );
 
     let fullText = '';
     const stream = await llm.stream(messages);
@@ -193,7 +200,7 @@ export async function streamRagResponse(
     const citations = parseCitations(fullText, chunks);
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    generation?.end({ metadata: { responseLength: fullText.length, citationCount: citations.length } });
+    generation?.end(isDev ? { output: fullText } : { metadata: { responseLength: fullText.length, citationCount: citations.length } });
 
     callbacks.onDone(fullText, citations, lf?.traceId);
   } catch (err) {

@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import Avatar from '@mui/material/Avatar';
 import CircularProgress from '@mui/material/CircularProgress';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
@@ -174,9 +173,6 @@ export function MessageList({ messages, isThinking, onFeedback }: Props) {
 
         {isThinking && (
           <Stack direction="row" spacing={1.5} alignItems="center">
-            <Avatar sx={{ width: 28, height: 28, bgcolor: 'primary.main', fontSize: '0.75rem' }}>
-              AI
-            </Avatar>
             <Box
               sx={{
                 bgcolor: 'background.paper',
