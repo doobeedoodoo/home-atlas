@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { db } from '../../../../packages/db/src/knex';
 import { asyncHandler } from '../utils/asyncHandler';
 import { AppError } from '../errors/AppError';
-import { streamRagResponse } from '../../../../packages/ai/src/index';
+import { streamRagResponse, type ChatHistoryMessage } from '../../../../packages/ai/src/index';
 
 const router = Router();
 
@@ -126,6 +126,16 @@ router.post(
       })
       .returning(['id', 'role', 'content', 'citations', 'created_at']);
 
+    // Fetch conversation history for LLM context
+    const historyWindow = parseInt(process.env['CHAT_HISTORY_MESSAGES'] ?? '10', 10);
+    const historyRows = await db('ChatMessages')
+      .where({ session_id: session.id })
+      .whereNot({ id: userMessage.id }) // no need to include the active query in the history messages
+      .select<ChatHistoryMessage[]>(['role', 'content'])
+      .orderBy('created_at', 'desc')
+      .limit(historyWindow);
+    const history = historyRows.reverse();
+
     // Set up SSE
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
@@ -164,7 +174,7 @@ router.post(
         sendEvent('error', { error: 'Failed to generate response' });
         res.end();
       },
-    });
+    }, history);
   }),
 );
 
