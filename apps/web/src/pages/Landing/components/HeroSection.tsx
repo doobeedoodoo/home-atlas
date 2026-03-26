@@ -4,6 +4,14 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 
+const EXAMPLE_QUESTIONS = [
+  'What is the model of the filter that my fridge uses?',
+  'When does my oven warranty expire?',
+  'Does my home insurance cover accidental water damage?',
+  'How do I descale my coffee maker?',
+  'The TV won\'t turn on.',
+];
+
 export function HeroSection() {
   return (
     <Box
@@ -40,6 +48,17 @@ export function HeroSection() {
               <Typography color="text.secondary" sx={{ lineHeight: 1.75 }}>
                 HomeAtlas keeps your documents in one place — then lets you ask questions about any of it.
               </Typography>
+            </Stack>
+
+            <Stack component="ul" spacing={1} sx={{ m: 0, pl: 0, listStyle: 'none' }}>
+              {EXAMPLE_QUESTIONS.map((q) => (
+                <Box component="li" key={q} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                  <Typography component="span" color="primary" sx={{ lineHeight: 1.6, flexShrink: 0 }}>•</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6, fontStyle: 'italic' }}>
+                    "{q}"
+                  </Typography>
+                </Box>
+              ))}
             </Stack>
 
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
