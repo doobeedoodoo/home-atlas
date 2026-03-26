@@ -69,18 +69,25 @@ export function HeroSection() {
           {/* Image column */}
           <Box sx={{ position: 'relative' }}>
             <Box
-              component="img"
-              src="/images/landingpagephoto.png"
-              alt="A calm, well-organised living room representing a well-managed home"
-              sx={{
-                width: '100%',
-                aspectRatio: '4/3',
-                objectFit: 'cover',
-                borderRadius: 4,
-                display: 'block',
-                boxShadow: '0 24px 64px rgba(0,0,0,0.12)',
-              }}
-            />
+              component="picture"
+              sx={{ display: 'block', width: '100%' }}
+            >
+              <source srcSet="/images/landingpagephoto.webp" type="image/webp" />
+              <Box
+                component="img"
+                src="/images/landingpagephoto.png"
+                alt="A calm, well-organised living room representing a well-managed home"
+                fetchPriority="high"
+                sx={{
+                  width: '100%',
+                  aspectRatio: '4/3',
+                  objectFit: 'cover',
+                  borderRadius: 4,
+                  display: 'block',
+                  boxShadow: '0 24px 64px rgba(0,0,0,0.12)',
+                }}
+              />
+            </Box>
           </Box>
         </Box>
       </Box>
