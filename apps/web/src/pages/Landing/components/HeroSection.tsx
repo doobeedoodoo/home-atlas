@@ -51,7 +51,7 @@ export function HeroSection() {
                 disableElevation
                 sx={{ borderRadius: 2.5, fontWeight: 600, px: 4 }}
               >
-                Get started — it's free →
+                Get started →
               </Button>
               <Button
                 component={RouterLink}
