@@ -2,7 +2,6 @@ import Box from '@mui/material/Box';
 import { PublicHeader } from '../../components/PublicHeader/PublicHeader';
 import { HeroSection } from './components/HeroSection';
 import { FeaturesSection } from './components/FeaturesSection';
-import { TestimonialsSection } from './components/TestimonialsSection';
 import { LandingFooter } from './components/LandingFooter';
 
 export function LandingPage() {
@@ -12,7 +11,6 @@ export function LandingPage() {
       <main>
         <HeroSection />
         <FeaturesSection />
-        <TestimonialsSection />
       </main>
       <LandingFooter />
     </Box>
