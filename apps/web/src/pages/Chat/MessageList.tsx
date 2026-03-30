@@ -122,8 +122,8 @@ export function MessageList({ messages, isThinking, onFeedback }: Props) {
             <Box sx={{ maxWidth: '80%' }}>
               <Box
                 sx={{
-                  bgcolor: msg.role === 'user' ? '#1C1C1C' : 'background.paper',
-                  color: msg.role === 'user' ? '#ffffff' : 'text.primary',
+                  bgcolor: msg.role === 'user' ? 'text.primary' : 'background.paper',
+                  color: msg.role === 'user' ? 'primary.contrastText' : 'text.primary',
                   border: msg.role === 'assistant' ? '1px solid' : 'none',
                   borderColor: 'divider',
                   borderRadius: 2,

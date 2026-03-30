@@ -1,5 +1,8 @@
-export const API_BASE_URL: string =
-  (import.meta.env['VITE_API_URL'] as string | undefined) ?? 'http://localhost:3000';
+const apiUrl = import.meta.env['VITE_API_URL'] as string | undefined;
+
+if (!apiUrl) throw new Error('Missing VITE_API_URL environment variable');
+
+export const API_BASE_URL: string = apiUrl;
 
 export async function apiFetch<T>(
   path: string,
@@ -25,5 +28,6 @@ export async function apiFetch<T>(
   }
 
   if (res.status === 204) return undefined as T;
+
   return res.json() as Promise<T>;
 }

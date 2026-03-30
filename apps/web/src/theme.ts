@@ -20,6 +20,9 @@ export const theme = createTheme({
       secondary: '#6B6B6B',
     },
     divider: '#E8E8E6',
+    error: {
+      main: '#d32f2f',
+    },
   },
   typography: {
     fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',

@@ -24,7 +24,7 @@ export function AppShell() {
     <Box sx={{ display: 'flex', minHeight: '100dvh' }}>
       {isMobile ? (
         <>
-          <AppBar position="fixed" sx={{ bgcolor: '#00674F', boxShadow: 'none' }}>
+          <AppBar position="fixed" sx={{ bgcolor: 'primary.main', boxShadow: 'none' }}>
             <Toolbar variant="dense">
               <IconButton
                 color="inherit"

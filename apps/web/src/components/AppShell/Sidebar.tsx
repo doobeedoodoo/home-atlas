@@ -52,7 +52,7 @@ export function Sidebar({ onClose }: Props) {
       sx={{
         width: SIDEBAR_WIDTH,
         height: '100dvh',
-        bgcolor: '#00674F',
+        bgcolor: 'primary.main',
         display: 'flex',
         flexDirection: 'column',
         flexShrink: 0,
@@ -64,7 +64,7 @@ export function Sidebar({ onClose }: Props) {
         <img src="/images/logo.png" alt="HomeAtlas logo" style={{ height: 32, width: 'auto', filter: 'brightness(0) invert(1)' }} />
         <Typography
           variant="h6"
-          sx={{ color: '#ffffff', fontWeight: 700, letterSpacing: '-0.02em' }}
+          sx={{ color: 'primary.contrastText', fontWeight: 700, letterSpacing: '-0.02em' }}
         >
           HomeAtlas
         </Typography>
@@ -84,12 +84,12 @@ export function Sidebar({ onClose }: Props) {
               sx={{
                 borderRadius: 2,
                 mb: 0.5,
-                color: selected ? '#ffffff' : 'rgba(255,255,255,0.55)',
+                color: selected ? 'primary.contrastText' : 'rgba(255,255,255,0.55)',
                 '&.Mui-selected': {
                   bgcolor: 'rgba(255,255,255,0.10)',
                   '&:hover': { bgcolor: 'rgba(255,255,255,0.14)' },
                 },
-                '&:hover': { bgcolor: 'rgba(255,255,255,0.06)', color: '#ffffff' },
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.06)', color: 'primary.contrastText' },
               }}
             >
               <ListItemIcon sx={{ minWidth: 36, color: 'inherit' }}>
@@ -118,7 +118,7 @@ export function Sidebar({ onClose }: Props) {
           }}
         >
           <ListItemIcon sx={{ minWidth: 36 }}>
-            <Avatar sx={{ width: 28, height: 28, bgcolor: '#ffffff', fontSize: '0.75rem', color: '#000000' }}>
+            <Avatar sx={{ width: 28, height: 28, bgcolor: 'background.paper', fontSize: '0.75rem', color: 'text.primary' }}>
               {avatarLetter}
             </Avatar>
           </ListItemIcon>
@@ -127,7 +127,7 @@ export function Sidebar({ onClose }: Props) {
             primaryTypographyProps={{
               fontSize: '0.8125rem',
               fontWeight: 500,
-              color: '#ffffff',
+              color: 'primary.contrastText',
               noWrap: true,
             }}
           />

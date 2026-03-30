@@ -156,7 +156,7 @@ export function ChatPage() {
             size="small"
             sx={{
               bgcolor: input.trim() ? 'primary.main' : 'grey.200',
-              color: input.trim() ? '#fff' : 'text.disabled',
+              color: input.trim() ? 'primary.contrastText' : 'text.disabled',
               '&:hover': { bgcolor: 'primary.dark' },
               '&.Mui-disabled': { bgcolor: 'grey.200', color: 'text.disabled' },
               flexShrink: 0,
