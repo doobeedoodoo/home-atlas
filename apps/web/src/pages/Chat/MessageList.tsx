@@ -103,10 +103,7 @@ export function MessageList({ messages, isThinking, onFeedback }: Props) {
       >
         <ChatBubbleOutlineIcon sx={{ fontSize: 40 }} />
         <Typography variant="body1" fontWeight={500} color="text.primary">
-          Ask anything about your documents
-        </Typography>
-        <Typography variant="body2" align="center">
-          I&apos;ll search across all your uploaded PDFs and cite my sources.
+          How can I help?
         </Typography>
       </Box>
     );

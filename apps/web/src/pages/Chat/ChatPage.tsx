@@ -143,7 +143,7 @@ export function ChatPage() {
             multiline
             maxRows={6}
             fullWidth
-            placeholder="Ask a question about your documents…"
+            placeholder="Ask anything about your documents…"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
