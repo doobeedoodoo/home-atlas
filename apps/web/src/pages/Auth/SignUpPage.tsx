@@ -5,11 +5,11 @@ import { clerkAppearance } from './clerkAppearance';
 
 export function SignUpPage() {
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box sx={{ minHeight: '100dvh', bgcolor: 'background.default' }}>
       <PublicHeader showAuthButtons={false} showBrandName />
       <Box
         sx={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',

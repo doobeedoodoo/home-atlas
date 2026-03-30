@@ -21,7 +21,7 @@ export function AppShell() {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+    <Box sx={{ display: 'flex', minHeight: '100dvh' }}>
       {isMobile ? (
         <>
           <AppBar position="fixed" sx={{ bgcolor: '#00674F', boxShadow: 'none' }}>
@@ -59,7 +59,7 @@ export function AppShell() {
           ml: isMobile ? 0 : `${SIDEBAR_WIDTH}px`,
           mt: isMobile ? '48px' : 0,
           bgcolor: 'background.default',
-          minHeight: isMobile ? 'calc(100vh - 48px)' : '100vh',
+          minHeight: isMobile ? 'calc(100dvh - 48px)' : '100dvh',
         }}
       >
         <Outlet />

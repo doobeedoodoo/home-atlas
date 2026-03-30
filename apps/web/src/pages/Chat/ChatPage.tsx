@@ -172,14 +172,14 @@ export function ChatPage() {
 
   if (isMobile) {
     return (
-      <Box sx={{ height: 'calc(100vh - 48px)', display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ height: 'calc(100dvh - 48px)', display: 'flex', flexDirection: 'column' }}>
         {chatArea}
       </Box>
     );
   }
 
   return (
-    <Box sx={{ height: '100vh', display: 'flex', overflow: 'hidden' }}>
+    <Box sx={{ height: '100dvh', display: 'flex', overflow: 'hidden' }}>
       <SessionSidebar
         selectedId={selectedSession}
         onSelect={handleSelectSession}

@@ -51,7 +51,7 @@ export function Sidebar({ onClose }: Props) {
     <Box
       sx={{
         width: SIDEBAR_WIDTH,
-        height: '100vh',
+        height: '100dvh',
         bgcolor: '#00674F',
         display: 'flex',
         flexDirection: 'column',
