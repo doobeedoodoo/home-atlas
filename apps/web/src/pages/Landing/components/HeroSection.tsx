@@ -80,7 +80,7 @@ export function HeroSection() {
                 color="inherit"
                 sx={{ borderRadius: 2.5, fontWeight: 500, px: 4, borderColor: 'divider', color: 'text.secondary' }}
               >
-                Sign in
+                Log in
               </Button>
             </Stack>
           </Stack>

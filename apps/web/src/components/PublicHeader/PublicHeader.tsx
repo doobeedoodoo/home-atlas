@@ -57,7 +57,7 @@ export function PublicHeader({ transparent = false, showAuthButtons = true, show
               Sign up
             </Button>
             <Button component={RouterLink} to="/login" variant="outlined" color="inherit" sx={{ borderColor: 'divider' }}>
-              Sign in
+              Log in
             </Button>
           </Box>
         )}
