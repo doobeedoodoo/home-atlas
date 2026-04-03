@@ -54,7 +54,7 @@ export function PublicHeader({ transparent = false, showAuthButtons = true, show
         {showAuthButtons && (
           <Box sx={{ display: 'flex', gap: 1.5, ml: 'auto' }}>
             <Button component={RouterLink} to="/signup" variant="contained" disableElevation>
-              Get started
+              Sign up
             </Button>
             <Button component={RouterLink} to="/login" variant="outlined" color="inherit" sx={{ borderColor: 'divider' }}>
               Sign in
