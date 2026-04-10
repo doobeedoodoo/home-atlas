@@ -1,6 +1,14 @@
 # HomeAtlas
 
-An AI-powered knowledge hub for your home. Upload PDFs (appliance manuals, architectural plans, insurance policies) and query them conversationally.
+HomeAtlas is an AI-powered knowledge hub for your home.
+
+It lets you upload PDFs (appliance manuals, architectural plans, insurance policies) and ask anything about them.
+
+- "What is the model of the filter that my fridge uses?"
+- "When does my oven warranty expire?"
+- "Does my home insurance cover accidental water damage?"
+- "How do I descale my coffee maker?"
+- "The TV won't turn on."
 
 ## Stack
 
