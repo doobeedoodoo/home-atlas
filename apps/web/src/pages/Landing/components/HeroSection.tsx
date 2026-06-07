@@ -54,7 +54,7 @@ export function HeroSection() {
               {EXAMPLE_QUESTIONS.map((q) => (
                 <Box component="li" key={q} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
                   <Typography component="span" color="primary" sx={{ lineHeight: 1.6, flexShrink: 0 }}>•</Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6, fontStyle: 'italic' }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
                     "{q}"
                   </Typography>
                 </Box>
