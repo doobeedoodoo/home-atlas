@@ -7,9 +7,7 @@ import Button from '@mui/material/Button';
 const EXAMPLE_QUESTIONS = [
   'What is the model of the filter that my fridge uses?',
   'When does my oven warranty expire?',
-  'Does my home insurance cover accidental water damage?',
-  'How do I descale my coffee maker?',
-  'The TV won\'t turn on.',
+  'Does my home insurance cover accidental water damage?'
 ];
 
 export function HeroSection() {
@@ -45,7 +43,7 @@ export function HeroSection() {
               >
                 Your home's AI knowledge hub
               </Typography>
-              <Typography color="text.secondary" sx={{ lineHeight: 1.75 }}>
+              <Typography color="text.secondary" variant="body1" sx={{ lineHeight: 1.75, fontSize: '1.25rem' }}>
                 HomeAtlas keeps your documents in one place — then lets you ask questions about any of it.
               </Typography>
             </Stack>
@@ -54,7 +52,7 @@ export function HeroSection() {
               {EXAMPLE_QUESTIONS.map((q) => (
                 <Box component="li" key={q} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
                   <Typography component="span" color="primary" sx={{ lineHeight: 1.6, flexShrink: 0 }}>•</Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
+                  <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.6 }}>
                     "{q}"
                   </Typography>
                 </Box>
